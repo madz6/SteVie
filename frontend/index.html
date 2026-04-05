@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CV Audit</title>
+<style>
+:root {
+  --ac: #D85A30;
+  --ac-light: #F09575;
+  --ac-bg: #FAECE7;
+  --ac-tx: #712B13;
+  --green: #00843F;
+  --green-bg: #E8F5EE;
+  --green-tx: #00612D;
+  --amber: #E5920A;
+  --amber-bg: #FFF4E0;
+  --amber-tx: #7A4D00;
+  --red: #D63031;
+  --red-bg: #FDECEC;
+  --red-tx: #8B1A1A;
+  --blue: #195AD7;
+  --blue-bg: #EBF0FC;
+  --violet: #8728E6;
+  --bg: #FFFFFF;
+  --bg2: #F6F6F4;
+  --bg3: #EDEDDB;
+  --tx: #1A1A1A;
+  --tx2: #6B6B6B;
+  --tx3: #9E9E9E;
+  --bd: #E5E5E5;
+  --bd2: #D4D4D4;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 100px;
+  --shadow: 0 2px 8px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.08);
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ac: #F09575; --ac-bg: #3A1A0A; --ac-tx: #F5C4B3;
+    --green: #5EC98D; --green-bg: #0C2A18; --green-tx: #8EEAB3;
+    --amber: #F5B946; --amber-bg: #2A1F08; --amber-tx: #FFD580;
+    --red: #F07070; --red-bg: #2A0C0C; --red-tx: #FFB0B0;
+    --blue: #5887FF; --blue-bg: #0C1830;
+    --bg: #1A1A1A; --bg2: #242424; --bg3: #2E2E2E;
+    --tx: #F0F0F0; --tx2: #A0A0A0; --tx3: #707070;
+    --bd: #333; --bd2: #444;
+    --shadow: 0 2px 8px rgba(0,0,0,.2);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.3);
+  }
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('https://fonts.gstatic.com/s/instrumentserif/v4/jizBRFtNs2ka5fCjGQ38kGF0OXi4EEa7Cq6h.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: var(--font); background: var(--bg2); color: var(--tx); line-height: 1.5; min-height: 100vh; display: flex; justify-content: center; padding: 24px 16px; }
+
+.shell {
+  width: 100%; max-width: 960px;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- Nav --- */
+.nav {
+  height: 54px; border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 24px; gap: 12px;
+  background: var(--bg);
+}
+.nav-brand { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600; color: var(--tx); letter-spacing: -.02em; }
+.nav-pip { width: 10px; height: 10px; border-radius: 50%; background: var(--ac); }
+.nav-r { margin-left: auto; display: flex; gap: 4px; }
+.nb {
+  font-size: 13px; font-weight: 400; background: none;
+  border: 1px solid var(--bd); border-radius: var(--radius-pill);
+  padding: 6px 16px; cursor: pointer; color: var(--tx2);
+  font-family: inherit; transition: all .15s ease;
+}
+.nb:hover { background: var(--bg2); color: var(--tx); }
+.nb.on { background: var(--tx); color: var(--bg); font-weight: 500; border-color: var(--tx); }
+
+/* --- Screens --- */
+.screen { display: none; }
+.screen.active { display: block; }
+.screen-center { display: none; flex-direction: column; align-items: center; }
+.screen-center.active { display: flex; }
+
+/* --- Upload screen --- */
+.upload-wrap { padding: 56px 40px 64px; display: flex; flex-direction: column; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--ac-bg); color: var(--ac-tx);
+  font-size: 11px; font-weight: 600; padding: 5px 14px;
+  border-radius: var(--radius-pill); margin-bottom: 24px;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.chip svg { width: 12px; height: 12px; }
+.hero-title {
+  font-family: var(--font-display); font-size: 44px; font-weight: 400;
+  color: var(--tx); line-height: 1.12; letter-spacing: -.03em;
+  text-align: center; margin-bottom: 12px;
+}
+.hero-sub {
+  font-size: 15px; color: var(--tx2); text-align: center;
+  max-width: 400px; line-height: 1.6; margin-bottom: 40px;
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex; border: 1px solid var(--bd); border-radius: var(--radius-pill);
+  padding: 3px; margin-bottom: 36px; background: var(--bg2);
+}
+.mode-btn {
+  font-size: 13px; font-weight: 500; border: none; cursor: pointer;
+  padding: 8px 22px; border-radius: var(--radius-pill);
+  background: none; color: var(--tx2); font-family: inherit;
+  transition: all .15s ease;
+}
+.mode-btn.on { background: var(--tx); color: var(--bg); }
+
+/* Drop zones */
+.drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 560px; margin-bottom: 16px; }
+.drop-zone {
+  border: 2px dashed var(--bd2); border-radius: var(--radius);
+  padding: 32px 20px; text-align: center; cursor: pointer;
+  position: relative; background: var(--bg); transition: all .2s ease;
+}
+.drop-zone:hover { border-color: var(--ac); background: var(--ac-bg); }
+.drop-zone.filled { border: 2px solid var(--green); background: var(--green-bg); }
+.drop-zone input[type="file"] { display: none; }
+.dz-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 10px; font-weight: 600; padding: 3px 10px;
+  border-radius: var(--radius-pill); letter-spacing: .04em; text-transform: uppercase;
+}
+.dz-badge.req { background: var(--ac-bg); color: var(--ac-tx); }
+.dz-badge.opt { background: var(--bg2); color: var(--tx3); }
+.dz-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-sm);
+  border: 1px solid var(--bd); background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+}
+.dz-title { font-size: 14px; font-weight: 500; color: var(--tx); margin-bottom: 4px; }
+.dz-hint { font-size: 12px; color: var(--tx2); }
+
+/* JD paste */
+.jd-paste { width: 100%; max-width: 560px; margin-bottom: 16px; display: none; }
+.jd-paste.show { display: block; }
+.jd-paste textarea {
+  width: 100%; height: 100px; font-size: 13px; resize: vertical;
+  border: 1px solid var(--bd); border-radius: var(--radius-sm);
+  padding: 12px 14px; background: var(--bg); color: var(--tx);
+  font-family: inherit; outline: none; transition: border-color .15s;
+}
+.jd-paste textarea:focus { border-color: var(--ac); }
+
+/* Input row */
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 560px; margin-bottom: 36px; }
+.field-label { font-size: 11px; font-weight: 600; color: var(--tx2); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.field-input {
+  width: 100%; font-size: 13px; padding: 10px 14px;
+  border: 1px solid var(--bd); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--tx); font-family: inherit; outline: none;
+}
+.field-input:focus { border-color: var(--ac); }
+.field-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B6B6B' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+/* Run button */
+.run-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 600; background: var(--tx);
+  color: var(--bg); border: none; border-radius: var(--radius-pill);
+  padding: 14px 40px; cursor: pointer; font-family: inherit;
+  letter-spacing: -.01em; transition: all .15s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.run-btn:active { transform: translateY(0); }
+.run-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.run-btn svg { width: 15px; height: 15px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.upload-error { display: none; width: 100%; max-width: 560px; margin-top: 12px; padding: 10px 14px;
+  font-size: 13px; color: var(--red-tx); background: var(--red-bg); border: 1px solid var(--red); border-radius: var(--radius-sm); }
+.upload-error.show { display: block; }
+.jd-paste-hint { width: 100%; max-width: 560px; font-size: 12px; color: var(--tx2); margin-bottom: 8px; line-height: 1.45; }
+
+.run-context { font-size: 12px; color: var(--tx2); margin-bottom: 16px; padding: 10px 14px; background: var(--bg2); border-radius: var(--radius-sm); border: 1px solid var(--bd); }
+.export-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.export-btn {
+  font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius-pill);
+  border: 1px solid var(--bd); background: var(--bg); color: var(--tx); cursor: pointer; font-family: inherit;
+}
+.export-btn:hover { border-color: var(--ac); background: var(--ac-bg); }
+
+.overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+@media (max-width: 640px) { .overview-grid { grid-template-columns: 1fr; } }
+.overview-card { border: 1px solid var(--bd); border-radius: var(--radius-sm); padding: 16px; background: var(--bg); }
+.overview-card h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--tx2); margin-bottom: 12px; }
+.ov-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--bd); }
+.ov-row:last-child { border-bottom: none; }
+.ov-label { color: var(--tx2); }
+.ov-val { font-weight: 600; color: var(--tx); }
+.summary-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--tx); line-height: 1.55; }
+.summary-list li { margin-bottom: 6px; }
+.priorities-box { border: 1px solid var(--bd); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; background: var(--bg2); }
+.priorities-title { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--tx); }
+.prior-item { font-size: 12px; padding: 6px 0; border-top: 1px solid var(--bd); color: var(--tx2); }
+.prior-item:first-of-type { border-top: none; padding-top: 0; }
+.prior-pts { color: var(--green); font-weight: 600; float: right; }
+
+.bullet-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+.bullet-filters span { font-size: 11px; color: var(--tx2); margin-right: 4px; }
+.filter-chip { font-size: 11px; padding: 5px 12px; border-radius: var(--radius-pill); border: 1px solid var(--bd); background: var(--bg); cursor: pointer; font-family: inherit; color: var(--tx2); }
+.filter-chip.on { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+
+.bc.hidden-sev { display: none; }
+
+.diff-panel { margin-top: 16px; padding: 14px; border: 1px dashed var(--bd2); border-radius: var(--radius-sm); font-size: 12px; display: none; }
+.diff-panel.show { display: block; }
+.diff-panel h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--tx2); margin-bottom: 8px; }
+.diff-row { margin-bottom: 6px; color: var(--tx2); }
+
+/* --- Processing screen --- */
+.proc-wrap { padding: 72px 40px; gap: 40px; }
+.proc-spinner { position: relative; width: 80px; height: 80px; }
+.proc-spinner-inner {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid var(--bd); background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+}
+.proc-spinner svg.ring {
+  position: absolute; animation: spin 1.4s linear infinite;
+}
+.proc-spinner svg.ring2 {
+  position: absolute; animation: spin 2.4s linear infinite reverse; opacity: .4;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.proc-title { font-family: var(--font-display); font-size: 26px; font-weight: 400; color: var(--tx); letter-spacing: -.02em; margin-bottom: 6px; }
+.proc-sub { font-size: 14px; color: var(--tx2); }
+.layer-list { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 6px; }
+.layer-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border: 1px solid var(--bd);
+  border-radius: var(--radius-sm); opacity: .35;
+  transition: all .25s ease; background: var(--bg);
+}
+.layer-item.running { opacity: 1; border-color: var(--ac); }
+.layer-item.done { opacity: 1; border-color: var(--green); background: var(--green-bg); }
+.li-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg2); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s;
+}
+.layer-item.running .li-dot { background: var(--ac-bg); }
+.layer-item.done .li-dot { background: var(--green-bg); }
+.li-name { font-size: 12px; font-weight: 500; color: var(--tx); }
+.li-desc { font-size: 11px; color: var(--tx2); }
+.li-time { font-size: 11px; color: var(--tx3); font-family: 'SF Mono', 'Cascadia Code', monospace; margin-left: auto; }
+.layer-item.done .li-time { color: var(--green); }
+
+/* --- Results screen --- */
+.results-wrap { background: var(--bg); }
+
+/* Score header */
+.score-header {
+  padding: 28px 32px 24px; border-bottom: 1px solid var(--bd);
+  display: flex; align-items: flex-start; gap: 28px; flex-wrap: wrap;
+}
+.score-main {}
+.score-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--tx2); margin-bottom: 6px; }
+.score-num { font-family: var(--font-display); font-size: 60px; font-weight: 400; color: var(--tx); line-height: 1; letter-spacing: -.04em; }
+.score-denom { font-size: 20px; color: var(--tx3); font-weight: 400; font-family: var(--font); }
+.score-zone {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+  font-size: 12px; font-weight: 600; padding: 5px 14px;
+  border-radius: var(--radius-pill);
+}
+.score-bars { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-size: 12px; color: var(--tx2); width: 100px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 6px; background: var(--bg2); border-radius: var(--radius-pill); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: var(--radius-pill); transition: width .6s ease; }
+.bar-val { font-size: 12px; font-weight: 600; color: var(--tx); width: 44px; text-align: right; }
+
+/* JD match box */
+.jd-score-box {
+  border: 1px solid var(--bd); border-radius: var(--radius);
+  padding: 18px 24px; min-width: 150px; text-align: center;
+}
+.jd-score-num { font-family: var(--font-display); font-size: 44px; font-weight: 400; color: var(--tx); line-height: 1; letter-spacing: -.03em; }
+.jd-score-target { font-size: 11px; color: var(--tx2); margin-top: 4px; }
+
+/* Tabs */
+.tab-bar { display: flex; border-bottom: 1px solid var(--bd); padding: 0 32px; }
+.tab {
+  font-size: 13px; font-weight: 400; background: none; border: none;
+  cursor: pointer; color: var(--tx2); padding: 13px 18px 15px;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .15s; font-family: inherit;
+}
+.tab:hover { color: var(--tx); }
+.tab.on { color: var(--tx); font-weight: 600; border-bottom-color: var(--ac); }
+
+.tab-content { padding: 24px 32px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Bullet cards */
+.role-header {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--tx2); margin-bottom: 14px; margin-top: 20px;
+}
+.role-header:first-child { margin-top: 0; }
+.bc {
+  border: 1px solid var(--bd); border-radius: var(--radius-sm);
+  margin-bottom: 8px; cursor: pointer; overflow: hidden; transition: all .15s;
+}
+.bc:hover { box-shadow: var(--shadow); }
+.bc-strong { border-left: 3px solid var(--green); }
+.bc-improve { border-left: 3px solid var(--amber); }
+.bc-revise { border-left: 3px solid var(--red); }
+.bc-head { display: flex; align-items: flex-start; gap: 10px; padding: 13px 14px; }
+.bc-pill {
+  flex-shrink: 0; margin-top: 2px; font-size: 10px; font-weight: 600;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.pill-strong { background: var(--green-bg); color: var(--green-tx); }
+.pill-improve { background: var(--amber-bg); color: var(--amber-tx); }
+.pill-revise { background: var(--red-bg); color: var(--red-tx); }
+.bc-text { font-size: 13px; color: var(--tx); flex: 1; line-height: 1.55; }
+.bc-toggle { font-size: 20px; color: var(--tx3); flex-shrink: 0; transition: transform .2s; user-select: none; }
+.bc.open .bc-toggle { transform: rotate(45deg); color: var(--tx); }
+.bc-detail { display: none; padding: 0 14px 14px; border-top: 1px solid var(--bd); }
+.bc.open .bc-detail { display: block; }
+.err-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; }
+.err-row + .err-row { border-top: 1px solid var(--bd); }
+.err-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-pill); flex-shrink: 0; text-transform: uppercase; letter-spacing: .03em; }
+.err-msg { font-size: 12px; color: var(--tx2); line-height: 1.5; }
+.err-fix { font-size: 12px; color: var(--green); font-style: italic; margin-top: 3px; }
+
+/* JD match panel */
+.qw-box {
+  border: 1px solid var(--bd); border-radius: var(--radius);
+  padding: 18px 20px; margin-bottom: 24px; background: var(--bg2);
+}
+.qw-title { font-size: 13px; font-weight: 600; color: var(--tx); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.qw-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.qw-item + .qw-item { border-top: 1px solid var(--bd); }
+.qw-num { width: 22px; height: 22px; border-radius: 50%; background: var(--ac); color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.qw-text { flex: 1; font-size: 13px; color: var(--tx); }
+.qw-pts { font-size: 11px; font-weight: 600; color: var(--green); white-space: nowrap; }
+
+.kw-tier-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--tx2); margin-bottom: 10px; margin-top: 20px; }
+.kw-tier-label:first-child { margin-top: 0; }
+.kw-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border: 1px solid var(--bd); border-radius: var(--radius-sm);
+  margin-bottom: 6px; background: var(--bg);
+}
+.kw-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.kw-icon.found { background: var(--green-bg); }
+.kw-icon.missing { background: var(--red-bg); }
+.kw-icon.semantic { background: var(--amber-bg); }
+.kw-name { font-size: 13px; font-weight: 500; color: var(--tx); flex: 1; }
+.kw-type { font-size: 10px; font-weight: 600; background: var(--bg2); color: var(--tx3); padding: 2px 8px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
+.kw-status { font-size: 11px; color: var(--tx2); }
+.kw-status.danger { color: var(--red); font-weight: 600; }
+
+/* Structure panel */
+.struct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.struct-card { border: 1px solid var(--bd); border-radius: var(--radius-sm); padding: 16px 18px; background: var(--bg); }
+.struct-card-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--tx2); margin-bottom: 12px; }
+.struct-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+.struct-label { color: var(--tx2); }
+.struct-val { font-weight: 500; color: var(--tx); }
+.struct-val.ok { color: var(--green); }
+.struct-val.warn { color: var(--amber); }
+.struct-val.bad { color: var(--red); }
+
+/* History panel */
+.hist-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border: 1px solid var(--bd);
+  border-radius: var(--radius-sm); margin-bottom: 8px;
+  cursor: pointer; transition: all .15s; background: var(--bg);
+  text-align: left; width: 100%; font-family: inherit; color: inherit;
+}
+.hist-item:hover { box-shadow: var(--shadow); border-color: var(--bd2); }
+.hist-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.hist-info { flex: 1; min-width: 0; }
+.hist-name { font-size: 13px; font-weight: 500; color: var(--tx); }
+.hist-meta { font-size: 11px; color: var(--tx2); }
+.hist-score { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--tx); letter-spacing: -.02em; }
+
+/* Error banner */
+.error-banner {
+  display: none; margin: 20px 32px; padding: 14px 18px;
+  background: var(--red-bg); border: 1px solid var(--red);
+  border-radius: var(--radius-sm); color: var(--red-tx);
+  font-size: 13px;
+}
+.error-banner.show { display: block; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .drop-grid { grid-template-columns: 1fr; }
+  .input-row { grid-template-columns: 1fr; }
+  .score-header { flex-direction: column; }
+  .struct-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 32px; }
+  body { padding: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- === NAV === -->
+<nav class="nav">
+  <div class="nav-brand"><div class="nav-pip"></div>Audit</div>
+  <div class="nav-r">
+    <button class="nb on" id="nav-upload" onclick="showScreen('upload')">New audit</button>
+    <button class="nb" id="nav-results" onclick="showScreen('results')">Results</button>
+  </div>
+</nav>
+
+<!-- === UPLOAD SCREEN === -->
+<div id="s-upload" class="screen active upload-wrap">
+
+  <div class="chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    8-layer deterministic pipeline
+  </div>
+
+  <h1 class="hero-title">Audit your CV<br/>against any role</h1>
+  <p class="hero-sub">Spatial, linguistic, and semantic ATS analysis. Same CV, same score, every time.</p>
+
+  <div class="mode-toggle">
+    <button class="mode-btn on" id="mode-q" onclick="setMode('quality')">Quality audit</button>
+    <button class="mode-btn" id="mode-jd" onclick="setMode('jd_match')">Full JD match</button>
+  </div>
+
+  <div class="drop-grid">
+    <div class="drop-zone" id="dz-cv" onclick="document.getElementById('file-cv').click()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-cv').click();}">
+      <label class="sr-only" for="file-cv">Upload CV file</label>
+      <div class="dz-badge req">Required</div>
+      <div class="dz-icon" id="icon-cv">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      </div>
+      <div class="dz-title">Your CV</div>
+      <div class="dz-hint" id="hint-cv">PDF or DOCX</div>
+      <input type="file" id="file-cv" accept=".pdf,.docx,.doc" onchange="onFileSelected(this,'cv')"/>
+    </div>
+    <div class="drop-zone" id="dz-jd" onclick="document.getElementById('file-jd').click()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-jd').click();}">
+      <label class="sr-only" for="file-jd">Upload job description file</label>
+      <div class="dz-badge opt" id="badge-jd">Optional</div>
+      <div class="dz-icon" id="icon-jd">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      </div>
+      <div class="dz-title">Job description</div>
+      <div class="dz-hint" id="hint-jd">PDF, DOCX, or paste text</div>
+      <input type="file" id="file-jd" accept=".pdf,.docx,.doc,.txt" onchange="onFileSelected(this,'jd')"/>
+    </div>
+  </div>
+
+  <p class="jd-paste-hint" id="jd-mode-hint">Paste or upload a job description anytime. JD scoring runs only when you choose <strong>Full JD match</strong> below.</p>
+  <div class="jd-paste show" id="jd-paste-wrap">
+    <label class="field-label" for="jd-paste-text">Job description (text)</label>
+    <textarea id="jd-paste-text" placeholder="Paste the job description here (optional for Quality audit; required for Full JD match)..." aria-describedby="jd-mode-hint"></textarea>
+  </div>
+
+  <div class="input-row" style="grid-template-columns:1fr">
+    <div>
+      <div class="field-label">Target role</div>
+      <input class="field-input" id="input-role" placeholder="e.g. Product Manager" title="Used to check your summary and JD context"/>
+    </div>
+  </div>
+
+  <button type="button" class="run-btn" id="btn-run" onclick="runAudit()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Run audit
+  </button>
+  <div class="upload-error" id="upload-error" role="alert"></div>
+</div>
+
+<!-- === PROCESSING SCREEN === -->
+<div id="s-processing" class="screen-center proc-wrap">
+  <div class="proc-spinner">
+    <div class="proc-spinner-inner">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="1.5"><path d="M9 12h6m-3-3v6M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/></svg>
+    </div>
+    <svg class="ring" style="inset:-3px;width:86px;height:86px" viewBox="0 0 86 86" fill="none"><circle cx="43" cy="43" r="40" stroke="var(--bd)" stroke-width="1.5"/><path d="M43 3 A40 40 0 0 1 83 43" stroke="var(--ac)" stroke-width="2" stroke-linecap="round"/></svg>
+    <svg class="ring2" style="inset:-10px;width:100px;height:100px" viewBox="0 0 100 100" fill="none"><path d="M50 5 A45 45 0 0 1 95 50" stroke="var(--ac)" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <div style="text-align:center">
+    <div class="proc-title" id="proc-title">Parsing your CV...</div>
+    <div class="proc-sub" id="proc-sub">Running pre-flight checks and format detection</div>
+  </div>
+  <div class="layer-list" id="layer-list"></div>
+</div>
+
+<!-- === RESULTS SCREEN === -->
+<div id="s-results" class="screen results-wrap">
+  <div class="error-banner" id="error-banner"></div>
+
+  <div class="tab-content" style="padding:20px 32px 0;border-bottom:1px solid var(--bd)">
+    <div class="run-context" id="run-context-strip" style="display:none"></div>
+    <div class="export-row">
+      <button type="button" class="export-btn" onclick="exportJSON()">Download JSON</button>
+      <button type="button" class="export-btn" onclick="exportMarkdown()">Download Markdown</button>
+    </div>
+  </div>
+
+  <!-- Score header -->
+  <div class="score-header" id="score-header" tabindex="-1">
+    <div class="score-main">
+      <div class="score-label">CV quality</div>
+      <div><span class="score-num" id="cv-score">--</span><span class="score-denom">/100</span></div>
+      <div class="score-zone" id="cv-zone" style="display:none"></div>
+    </div>
+    <div class="score-bars" id="score-bars"></div>
+    <div class="jd-score-box" id="jd-box" style="display:none">
+      <div class="score-label">JD match</div>
+      <div><span class="jd-score-num" id="jd-score">--</span><span class="score-denom">/100</span></div>
+      <div class="jd-score-target" id="jd-target"></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar" role="tablist" aria-label="Audit sections">
+    <button type="button" class="tab on" id="tab-overview" role="tab" aria-selected="true" aria-controls="tp-overview" onclick="showTab('overview',this)">Overview</button>
+    <button type="button" class="tab" id="tab-bullets" role="tab" aria-selected="false" aria-controls="tp-bullets" onclick="showTab('bullets',this)">Bullet review</button>
+    <button type="button" class="tab" id="tab-jdmatch" role="tab" aria-selected="false" aria-controls="tp-jdmatch" onclick="showTab('jdmatch',this)">JD match</button>
+    <button type="button" class="tab" id="tab-structure" role="tab" aria-selected="false" aria-controls="tp-structure" onclick="showTab('structure',this)">Structure</button>
+    <button type="button" class="tab" id="tab-history" role="tab" aria-selected="false" aria-controls="tp-history" onclick="showTab('history',this)">History</button>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-panel active" id="tp-overview" role="tabpanel" aria-labelledby="tab-overview"></div>
+    <div class="tab-panel" id="tp-bullets" role="tabpanel" aria-labelledby="tab-bullets"></div>
+    <div class="tab-panel" id="tp-jdmatch" role="tabpanel" aria-labelledby="tab-jdmatch"></div>
+    <div class="tab-panel" id="tp-structure" role="tabpanel" aria-labelledby="tab-structure"></div>
+    <div class="tab-panel" id="tp-history" role="tabpanel" aria-labelledby="tab-history"></div>
+  </div>
+</div>
+
+</div><!-- .shell -->
+
+<script>
+var DEBUG = new URLSearchParams(window.location.search).get('debug') === '1';
+var currentMode = 'quality';
+var cvFile = null;
+var jdFile = null;
+var lastResult = null;
+var sseLastEvent = '';
+var bulletFilter = 'all';
+
+var LAYER_TITLES = [
+  'Parsing your CV...', 'Checking ATS layout...', 'Mapping structure...',
+  'Analysing every bullet...', 'Weighing above-fold content...',
+  'Matching against the JD...', 'Calculating final scores...', 'Saving to history...'
+];
+
+/* --- Navigation --- */
+function showScreen(name) {
+  document.querySelectorAll('.screen, .screen-center').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  var el = document.getElementById('s-' + name);
+  if (el) el.classList.add('active');
+  document.getElementById('nav-upload').classList.toggle('on', name === 'upload');
+  document.getElementById('nav-results').classList.toggle('on', name === 'results');
+  if (name === 'results' && !lastResult) loadHistory();
+}
+
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('mode-q').classList.toggle('on', m === 'quality');
+  document.getElementById('mode-jd').classList.toggle('on', m === 'jd_match');
+  var badge = document.getElementById('badge-jd');
+  if (m === 'jd_match') {
+    badge.textContent = 'Required';
+    badge.className = 'dz-badge req';
+  } else {
+    badge.textContent = 'Optional';
+    badge.className = 'dz-badge opt';
+  }
+}
+
+function onFileSelected(input, type) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var zone = document.getElementById('dz-' + type);
+  var hint = document.getElementById('hint-' + type);
+  var icon = document.getElementById('icon-' + type);
+  zone.classList.add('filled');
+  hint.textContent = file.name;
+  icon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+  if (type === 'cv') cvFile = file;
+  else jdFile = file;
+}
+
+/* --- Build layer list --- */
+function buildLayerList() {
+  var LAYERS = [
+    { n: 'Layer 0 \u2014 Pre-flight', d: 'Format routing \xb7 image PDF detection \xb7 date pre-calc' },
+    { n: 'Layer 1 \u2014 Spatial', d: 'BBox layout \xb7 font hierarchy \xb7 ATS traps' },
+    { n: 'Layer 2 \u2014 Structure', d: 'Contact \xb7 trajectory \xb7 section order \xb7 seniority' },
+    { n: 'Layer 3 \u2014 Linguistic', d: 'Achievement classification \xb7 tense \xb7 verb quality' },
+    { n: 'Layer 4 \u2014 Positional', d: 'Above-fold weighting \xb7 bullet distribution' },
+    { n: 'Layer 5 \u2014 Semantic ATS', d: 'JD keyword tiers \xb7 vector match \xb7 density' },
+    { n: 'Layer 6 \u2014 Scoring', d: 'Aggregating 100pt quality + 100pt JD match' },
+    { n: 'Layer 7 \u2014 Storage', d: 'SQLite versioning \xb7 diff computation' },
+  ];
+  var ll = document.getElementById('layer-list');
+  ll.innerHTML = LAYERS.map(function(l, i) {
+    return '<div class="layer-item" id="li-' + i + '">'
+      + '<div class="li-dot"><div style="width:6px;height:6px;border-radius:50%;background:var(--tx3)"></div></div>'
+      + '<div style="flex:1;min-width:0"><div class="li-name">' + l.n + '</div>'
+      + '<div class="li-desc">' + l.d + '</div></div>'
+      + '<div class="li-time" id="lt-' + i + '"></div>'
+      + '</div>';
+  }).join('');
+}
+
+function updateLayer(index, status) {
+  var item = document.getElementById('li-' + index);
+  if (!item) return;
+  item.className = 'layer-item ' + status;
+  var dot = item.querySelector('.li-dot');
+  if (status === 'running') {
+    dot.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:var(--ac)"></div>';
+  } else if (status === 'done') {
+    dot.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+  }
+  if (index < LAYER_TITLES.length) {
+    document.getElementById('proc-title').textContent = LAYER_TITLES[index];
+  }
+}
+
+/* --- Run audit via SSE --- */
+function runAudit() {
+  var errEl = document.getElementById('upload-error');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+
+  if (!cvFile) {
+    errEl.textContent = 'Please upload a CV file (PDF or DOCX).';
+    errEl.classList.add('show');
+    return;
+  }
+
+  var jdText = (document.getElementById('jd-paste-text').value || '').trim();
+  if (currentMode === 'jd_match' && !jdFile && !jdText) {
+    errEl.textContent = 'Full JD match requires a job description — paste text or upload a JD file.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  var btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  sseLastEvent = '';
+  showScreen('processing');
+  buildLayerList();
+
+  var form = new FormData();
+  form.append('cv_file', cvFile);
+  if (jdFile) form.append('jd_file', jdFile);
+  if (jdText) form.append('jd_text', jdText);
+  form.append('target_role', document.getElementById('input-role').value);
+  form.append('mode', currentMode);
+
+  var t0 = performance.now();
+  fetch('/api/audit', { method: 'POST', body: form }).then(function(resp) {
+    var reader = resp.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+
+    function read() {
+      reader.read().then(function(chunk) {
+        if (chunk.done) {
+          btn.disabled = false;
+          sseLastEvent = '';
+          if (DEBUG) console.log('[audit] stream closed in', (performance.now() - t0).toFixed(0), 'ms');
+          return;
+        }
+        buffer += decoder.decode(chunk.value, { stream: true });
+        var lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (line.startsWith('event:')) {
+            sseLastEvent = line.substring(6).trim();
+          } else if (line.startsWith('data:')) {
+            var data = line.substring(5).trim();
+            try {
+              var parsed = JSON.parse(data);
+              handleSSE(sseLastEvent, parsed);
+            } catch(e) {}
+          }
+        }
+        read();
+      });
+    }
+    read();
+  }).catch(function(err) {
+    btn.disabled = false;
+    errEl.textContent = 'Network error: ' + err.message;
+    errEl.classList.add('show');
+    showScreen('upload');
+  });
+}
+
+function handleSSE(event, data) {
+  if (DEBUG && (event === 'result' || event === 'error')) {
+    console.log('[audit] event:', event, event === 'result' ? { audit_id: data.audit_id } : data);
+  }
+  if (event === 'layer') {
+    updateLayer(data.index, data.status);
+  } else if (event === 'result') {
+    lastResult = data;
+    renderResults(data);
+    setTimeout(function() {
+      showScreen('results');
+      var h = document.getElementById('score-header');
+      if (h) h.setAttribute('tabindex', '-1');
+      try { document.getElementById('score-header').focus(); } catch(e) {}
+    }, 400);
+    document.getElementById('btn-run').disabled = false;
+  } else if (event === 'error') {
+    document.getElementById('btn-run').disabled = false;
+    var banner = document.getElementById('error-banner');
+    banner.textContent = data.message || 'An error occurred.';
+    banner.classList.add('show');
+    showScreen('results');
+  }
+}
+
+/* --- Render results --- */
+function renderResults(data) {
+  var s = data.scores || {};
+  document.getElementById('cv-score').textContent = s.cv_quality_total || 0;
+
+  // Zone
+  var total = s.cv_quality_total || 0;
+  var zoneEl = document.getElementById('cv-zone');
+  zoneEl.style.display = 'inline-flex';
+  if (total >= 86) {
+    zoneEl.style.background = 'var(--green-bg)'; zoneEl.style.color = 'var(--green-tx)';
+    zoneEl.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:currentColor"></div>Ready to send';
+  } else if (total >= 65) {
+    zoneEl.style.background = 'var(--amber-bg)'; zoneEl.style.color = 'var(--amber-tx)';
+    zoneEl.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:currentColor"></div>Improvements will lift this';
+  } else if (total >= 45) {
+    zoneEl.style.background = 'var(--amber-bg)'; zoneEl.style.color = 'var(--amber-tx)';
+    zoneEl.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:currentColor"></div>Revise before sending';
+  } else {
+    zoneEl.style.background = 'var(--red-bg)'; zoneEl.style.color = 'var(--red-tx)';
+    zoneEl.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:currentColor"></div>Major revision needed';
+  }
+
+  // Bars
+  var bars = document.getElementById('score-bars');
+  bars.innerHTML = [
+    barRow('Impact', s.cv_impact || 0, 40, 'var(--ac)'),
+    barRow('Presentation', s.cv_presentation || 0, 30, 'var(--amber)'),
+    barRow('Competencies', s.cv_competencies || 0, 30, 'var(--green)'),
+  ].join('');
+
+  // JD (show whenever Full JD match was run, even if score is 0)
+  var jdBox = document.getElementById('jd-box');
+  if (data.mode === 'jd_match') {
+    jdBox.style.display = 'block';
+    document.getElementById('jd-score').textContent = s.jd_match_total != null ? s.jd_match_total : 0;
+    document.getElementById('jd-target').textContent = data.target_role || 'JD match';
+  } else {
+    jdBox.style.display = 'none';
+  }
+
+  var rc = document.getElementById('run-context-strip');
+  var ctx = data.run_context || {};
+  var modeLabel = data.mode === 'jd_match' ? 'Full JD match' : 'Quality audit';
+  rc.style.display = 'block';
+  rc.innerHTML = '<strong>' + esc(modeLabel) + '</strong>'
+    + (data.target_role ? ' \xb7 Target: ' + esc(data.target_role) : '')
+    + (ctx.cv_filename ? ' \xb7 File: ' + esc(ctx.cv_filename) : '')
+    + (ctx.run_at ? ' \xb7 ' + esc(ctx.run_at) : '')
+    + (data.audit_id ? ' \xb7 Audit #' + data.audit_id : '');
+
+  renderOverview(data);
+  renderBullets(data);
+  renderJDMatch(data);
+  renderStructure(data);
+  loadHistory();
+  showTab('overview', document.getElementById('tab-overview'));
+
+  document.getElementById('error-banner').classList.remove('show');
+}
+
+function barRow(label, val, max, color) {
+  var pct = Math.round((val / max) * 100);
+  return '<div class="bar-row">'
+    + '<span class="bar-label">' + label + '</span>'
+    + '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>'
+    + '<span class="bar-val">' + val + '/' + max + '</span>'
+    + '</div>';
+}
+
+function ovRow(label, scoreObj) {
+  if (!scoreObj) return '';
+  return '<div class="ov-row"><span class="ov-label">' + esc(label) + '</span><span class="ov-val">'
+    + (scoreObj.score != null ? scoreObj.score : 0) + '/' + (scoreObj.max || 0) + '</span></div>';
+}
+
+function renderOverview(data) {
+  var el = document.getElementById('tp-overview');
+  var sb = data.score_breakdown || {};
+  var cv = sb.cv_quality || {};
+  var imp = cv.impact || {};
+  var pres = cv.presentation || {};
+  var comp = cv.competencies || {};
+  var jd = sb.jd_match;
+  var hasBreakdown = imp.action_verbs && typeof imp.action_verbs.score === 'number';
+
+  var left = hasBreakdown ? ('<div class="overview-card"><h3>CV quality \u2014 Impact</h3>'
+    + ovRow('Action verbs', imp.action_verbs) + ovRow('Specificity', imp.specificity)
+    + ovRow('Quantification', imp.quantification) + ovRow('Avoided words', imp.avoided_words)
+    + ovRow('Impact total', imp.total) + '</div>'
+    + '<div class="overview-card"><h3>CV quality \u2014 Presentation</h3>'
+    + ovRow('Length / format', pres.length_format) + ovRow('Sections', pres.sections)
+    + ovRow('Consistency', pres.consistency) + ovRow('Completeness', pres.completeness)
+    + ovRow('Spelling / grammar', pres.spelling_grammar) + ovRow('Presentation total', pres.total) + '</div>'
+    + '<div class="overview-card"><h3>CV quality \u2014 Competencies</h3>'
+    + ovRow('Analytical', comp.analytical) + ovRow('Communication', comp.communication)
+    + ovRow('Leadership', comp.leadership) + ovRow('Teamwork', comp.teamwork)
+    + ovRow('Initiative', comp.initiative) + ovRow('Competencies total', comp.total) + '</div>')
+    : '<div class="overview-card"><h3>CV quality</h3><p style="font-size:12px;color:var(--tx2)">This snapshot has no sub-score breakdown (older save). Use the score bars above; re-run an audit for full detail.</p></div>';
+
+  var right = '<div class="overview-card"><h3>Executive summary</h3><ul class="summary-list">';
+  var summ = data.executive_summary || [];
+  if (!summ.length) right += '<li style="color:var(--tx2)">No summary for this snapshot.</li>';
+  summ.forEach(function(line) {
+    right += '<li>' + esc(line) + '</li>';
+  });
+  right += '</ul><p style="font-size:12px;color:var(--tx2);margin-top:12px">Dig into <button type="button" class="export-btn" style="padding:4px 10px" onclick="showTab(\'bullets\',document.getElementById(\'tab-bullets\'))">Bullet review</button>';
+  if (data.mode === 'jd_match') {
+    right += ' or <button type="button" class="export-btn" style="padding:4px 10px" onclick="showTab(\'jdmatch\',document.getElementById(\'tab-jdmatch\'))">JD match</button>';
+  }
+  right += ' for details.</p></div>';
+
+  if (jd) {
+    right += '<div class="overview-card"><h3>JD relevance</h3>'
+      + ovRow('Exact keyword match', jd.exact_match) + ovRow('Semantic match', jd.semantic_match)
+      + ovRow('Experience alignment', jd.experience_match) + ovRow('ATS / formatting pool', jd.ats_formatting)
+      + ovRow('JD match total', jd.total) + '</div>';
+  } else if (data.mode === 'jd_match' && (data.scores || {}).jd_match_total != null) {
+    var jt = data.scores.jd_match_total;
+    right += '<div class="overview-card"><h3>JD relevance</h3><p style="font-size:12px;color:var(--tx2)">JD match total: <strong>' + jt + '/100</strong> (sub-scores unavailable in this snapshot).</p></div>';
+  } else {
+    right += '<div class="overview-card"><h3>JD relevance</h3><p style="font-size:12px;color:var(--tx2)">Run <strong>Full JD match</strong> with a job description to score fit to a specific role.</p></div>';
+  }
+
+  var pri = buildPriorities(data);
+  var priHtml = '<div class="priorities-box"><div class="priorities-title">Prioritized actions</div>';
+  pri.forEach(function(p) {
+    priHtml += '<div class="prior-item">' + (p.pts ? '<span class="prior-pts">+' + p.pts + ' pts est.</span>' : '')
+      + esc(p.text) + '</div>';
+  });
+  priHtml += '</div>';
+
+  el.innerHTML = priHtml + '<div class="overview-grid">' + left + '</div><div class="overview-grid" style="grid-template-columns:1fr">' + right + '</div>';
+}
+
+function buildPriorities(data) {
+  var seen = {};
+  var out = [];
+  function add(text, pts) {
+    if (!text || seen[text]) return;
+    seen[text] = 1;
+    out.push({ text: text, pts: pts || 0 });
+  }
+  (data.errors || []).slice(0, 5).forEach(function(e) { add(e, 0); });
+  (data.jd_match && data.jd_match.quick_wins || []).forEach(function(w) {
+    add(w.action || '', w.points || 0);
+  });
+  if (out.length < 8 && data.sections) {
+    data.sections.forEach(function(sec) {
+      (sec.roles || []).forEach(function(role) {
+        (role.bullets || []).forEach(function(b) {
+          if ((b.errors || []).length >= 2 && out.length < 12) {
+            var snippet = (b.original_text || '').slice(0, 60);
+            add('Revise bullet: ' + snippet + (snippet.length >= 60 ? '\u2026' : ''), 0);
+          }
+        });
+      });
+    });
+  }
+  return out.slice(0, 12);
+}
+
+function downloadBlob(filename, mime, text) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportJSON() {
+  if (!lastResult) return;
+  var id = lastResult.audit_id || 'export';
+  var stamp = (lastResult.run_context && lastResult.run_context.run_at) || '';
+  downloadBlob('cv-audit-' + id + '-' + stamp.replace(/[:]/g, '-') + '.json', 'application/json',
+    JSON.stringify(lastResult, null, 2));
+}
+
+function exportMarkdown() {
+  if (!lastResult) return;
+  var d = lastResult;
+  var lines = ['# CV audit report', ''];
+  lines.push('## Run context');
+  lines.push('- Mode: ' + (d.mode || ''));
+  lines.push('- Target role: ' + (d.target_role || '—'));
+  if (d.run_context) {
+    lines.push('- File: ' + (d.run_context.cv_filename || '—'));
+    lines.push('- When: ' + (d.run_context.run_at || '—'));
+  }
+  if (d.audit_id) lines.push('- Audit ID: ' + d.audit_id);
+  lines.push('');
+  lines.push('## Scores');
+  var sc = d.scores || {};
+  lines.push('| Metric | Score |');
+  lines.push('|--------|-------|');
+  lines.push('| CV quality (total) | ' + (sc.cv_quality_total || 0) + '/100 |');
+  lines.push('| Impact | ' + (sc.cv_impact || 0) + '/40 |');
+  lines.push('| Presentation | ' + (sc.cv_presentation || 0) + '/30 |');
+  lines.push('| Competencies | ' + (sc.cv_competencies || 0) + '/30 |');
+  if (d.mode === 'jd_match') lines.push('| JD match | ' + (sc.jd_match_total || 0) + '/100 |');
+  lines.push('');
+  lines.push('## Executive summary');
+  (d.executive_summary || []).forEach(function(s) { lines.push('- ' + s); });
+  lines.push('');
+  lines.push('## Document-level issues');
+  (d.errors || []).forEach(function(e) { lines.push('- ' + e); });
+  if (!(d.errors || []).length) lines.push('- None flagged.');
+  lines.push('');
+  lines.push('## Bullets (summary)');
+  (d.sections || []).forEach(function(sec) {
+    lines.push('### ' + (sec.section_name || 'Section'));
+    (sec.roles || []).forEach(function(role) {
+      lines.push('**' + (role.title || '') + ' @ ' + (role.company || '') + '**');
+      (role.bullets || []).forEach(function(b) {
+        lines.push('- ' + (b.original_text || ''));
+        (b.errors || []).forEach(function(er) {
+          lines.push('  - *' + er.type + '*: ' + er.message);
+        });
+      });
+    });
+  });
+  if (d.jd_match && (d.jd_match.keyword_analysis || []).length) {
+    lines.push('');
+    lines.push('## JD keywords');
+    (d.jd_match.keyword_analysis || []).forEach(function(k) {
+      lines.push('- **' + k.keyword + '** (' + k.tier + '): ' + k.status);
+    });
+  }
+  downloadBlob('cv-audit-report.md', 'text/markdown;charset=utf-8', lines.join('\n'));
+}
+
+/* --- Bullet review --- */
+function renderBullets(data) {
+  var container = document.getElementById('tp-bullets');
+  bulletFilter = 'all';
+  if (!data.sections || !data.sections.length) {
+    container.innerHTML = '<p style="color:var(--tx2);font-size:13px">No sections were detected in the parsed CV. Try a simpler single-column layout, or ensure headings (Experience, Education) are on their own lines.</p>';
+    return;
+  }
+  var filters = '<div class="bullet-filters"><span>Show:</span>'
+    + '<button type="button" class="filter-chip on" data-f="all" onclick="setBulletFilter(\'all\',this)">All</button>'
+    + '<button type="button" class="filter-chip" data-f="revise" onclick="setBulletFilter(\'revise\',this)">Revise</button>'
+    + '<button type="button" class="filter-chip" data-f="improve" onclick="setBulletFilter(\'improve\',this)">Improve</button>'
+    + '<button type="button" class="filter-chip" data-f="strong" onclick="setBulletFilter(\'strong\',this)">Strong</button></div>';
+  var html = '';
+  var anyBullets = false;
+  data.sections.forEach(function(section) {
+    if (!section.roles || !section.roles.length) return;
+    section.roles.forEach(function(role) {
+      var roleLabel = (role.company || '') + (role.company && role.title ? ' \u2014 ' : '') + (role.title || '');
+      if (role.is_current_role) roleLabel += ' \xb7 Current';
+      html += '<div class="role-header">' + esc(roleLabel) + '</div>';
+      (role.bullets || []).forEach(function(b, bi) {
+        anyBullets = true;
+        var sev = 'strong';
+        var sevLabel = 'Strong';
+        if (b.errors && b.errors.length >= 2) { sev = 'revise'; sevLabel = 'Revise'; }
+        else if (b.errors && b.errors.length === 1) { sev = 'improve'; sevLabel = 'Improve'; }
+        html += '<div class="bc bc-' + sev + '" data-sev="' + sev + '" onclick="toggleBullet(this)">';
+        html += '<div class="bc-head">';
+        html += '<span class="bc-pill pill-' + sev + '">' + sevLabel + '</span>';
+        html += '<span class="bc-text">' + esc(b.original_text) + '</span>';
+        html += '<span class="bc-toggle">+</span>';
+        html += '</div>';
+        html += '<div class="bc-detail">';
+        if (!b.errors || !b.errors.length) {
+          html += '<div class="err-row"><span class="err-pill" style="background:var(--green-bg);color:var(--green-tx)">No errors</span>';
+          html += '<span class="err-msg">Strong verb \xb7 Quantified \xb7 Achievement framing</span></div>';
+        } else {
+          b.errors.forEach(function(e) {
+            var pillBg = sev === 'revise' ? 'var(--red-bg)' : 'var(--amber-bg)';
+            var pillColor = sev === 'revise' ? 'var(--red-tx)' : 'var(--amber-tx)';
+            html += '<div class="err-row">';
+            html += '<span class="err-pill" style="background:' + pillBg + ';color:' + pillColor + '">' + esc(e.type) + '</span>';
+            html += '<div><div class="err-msg">' + esc(e.message) + '</div>';
+            if (e.fix) html += '<div class="err-fix">Fix \u2192 ' + esc(e.fix) + '</div>';
+            html += '</div></div>';
+          });
+        }
+        html += '</div></div>';
+      });
+    });
+  });
+  if (!anyBullets) {
+    container.innerHTML = filters + '<p style="color:var(--tx2);font-size:13px">Sections were found but no bullets were extracted. Check that bullets use standard markers (\u2022, -, *) or clear line breaks under each role.</p>';
+    return;
+  }
+  container.innerHTML = filters + html;
+  applyBulletFilter();
+}
+
+function setBulletFilter(f, btn) {
+  bulletFilter = f;
+  document.querySelectorAll('.bullet-filters .filter-chip').forEach(function(c) {
+    c.classList.toggle('on', c.getAttribute('data-f') === f);
+  });
+  applyBulletFilter();
+}
+
+function applyBulletFilter() {
+  document.querySelectorAll('#tp-bullets .bc').forEach(function(card) {
+    var sev = card.getAttribute('data-sev') || 'strong';
+    var show = bulletFilter === 'all' || sev === bulletFilter;
+    card.classList.toggle('hidden-sev', !show);
+  });
+}
+
+function toggleBullet(el) { el.classList.toggle('open'); }
+
+/* --- JD Match --- */
+function renderJDMatch(data) {
+  var container = document.getElementById('tp-jdmatch');
+  var jd = data.jd_match || {};
+  var kws = jd.keyword_analysis || [];
+  var wins = jd.quick_wins || [];
+
+  if (!kws.length) {
+    container.innerHTML = '<p style="color:var(--tx2);font-size:13px">No JD uploaded \u2014 switch to Full JD Match mode and upload a job description.</p>';
+    return;
+  }
+
+  var html = '';
+
+  // Quick wins
+  if (wins.length) {
+    var totalPts = wins.reduce(function(a, w) { return a + (w.points || 0); }, 0);
+    html += '<div class="qw-box">';
+    html += '<div class="qw-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Quick wins \u2014 estimated +' + totalPts + ' pts</div>';
+    wins.forEach(function(w, i) {
+      html += '<div class="qw-item">';
+      html += '<div class="qw-num">' + (i + 1) + '</div>';
+      html += '<span class="qw-text">' + esc(w.action) + '</span>';
+      html += '<span class="qw-pts">+' + w.points + ' pts</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Tier 1
+  var t1 = kws.filter(function(k) { return k.tier === 'tier_1'; });
+  var t2 = kws.filter(function(k) { return k.tier === 'tier_2'; });
+
+  if (t1.length) {
+    html += '<div class="kw-tier-label">Tier 1 \u2014 critical requirements</div>';
+    t1.forEach(function(k) { html += kwRow(k); });
+  }
+  if (t2.length) {
+    html += '<div class="kw-tier-label">Tier 2 \u2014 preferred</div>';
+    t2.forEach(function(k) { html += kwRow(k); });
+  }
+
+  container.innerHTML = html;
+}
+
+function kwRow(k) {
+  var iconClass = 'missing';
+  var iconSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>';
+  var statusClass = 'danger';
+  var st = k.status || '';
+
+  if (st.indexOf('Found') >= 0 || st.indexOf('Demonstrated') >= 0) {
+    iconClass = 'found';
+    iconSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+    statusClass = '';
+  } else if (st.indexOf('Semantic') >= 0) {
+    iconClass = 'semantic';
+    iconSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>';
+    statusClass = '';
+  }
+
+  return '<div class="kw-row">'
+    + '<div class="kw-icon ' + iconClass + '">' + iconSvg + '</div>'
+    + '<span class="kw-name">' + esc(k.keyword) + '</span>'
+    + '<span class="kw-type">' + esc(k.type || '') + '</span>'
+    + '<span class="kw-status ' + statusClass + '">' + esc(k.status || 'Not found') + '</span>'
+    + '</div>';
+}
+
+/* --- Structure --- */
+function renderStructure(data) {
+  var container = document.getElementById('tp-structure');
+  var m = data.metadata || {};
+  var sa = data.structural_analysis || {};
+
+  container.innerHTML = '<div class="struct-grid">'
+    + structCard('Page metrics', [
+        ['Pages', m.estimated_pages || 1, ''],
+        ['Word count', m.total_word_count || 0, ''],
+        ['Whitespace', ((m.whitespace_ratio || 0) * 100).toFixed(0) + '%', whiteOk(m.whitespace_ratio)],
+        ['Above-fold score', (m.above_fold_score || 0).toFixed(0) + '%', ''],
+      ])
+    + structCard('ATS format', [
+        ['Multi-column', sa.has_multi_column_error ? 'Detected' : 'None', sa.has_multi_column_error ? 'bad' : 'ok'],
+        ['Text boxes', sa.has_hidden_text_boxes ? 'Detected' : 'None', sa.has_hidden_text_boxes ? 'bad' : 'ok'],
+        ['Font hierarchy', sa.font_hierarchy_valid ? 'Valid' : 'Invalid', sa.font_hierarchy_valid ? 'ok' : 'warn'],
+        ['Ghost text', sa.has_ghost_text ? 'Detected' : 'None', sa.has_ghost_text ? 'bad' : 'ok'],
+      ])
+    + structCard('Trajectory', [
+        ['Career stage', m.career_stage + ' (' + (m.total_experience_years || 0) + ' yrs)', ''],
+        ['Progression', sa.career_progression_valid ? 'Upward' : 'Demotion detected', sa.career_progression_valid ? 'ok' : 'bad'],
+        ['Section order', sa.section_order_valid ? 'Correct' : 'Non-standard', sa.section_order_valid ? 'ok' : 'warn'],
+        ['Grad\u2192job gap', (sa.education_experience_gap_days || 0) + ' days', sa.education_experience_gap_days > 180 ? 'warn' : 'ok'],
+      ])
+    + structCard('Skills section', [
+        ['Categorised', sa.skills_categorized ? 'Yes' : 'Flat list', sa.skills_categorized ? 'ok' : 'warn'],
+        ['Demonstrated', (sa.demonstrated_skills || []).join(', ') || '\u2014', ''],
+        ['Listed only', (sa.listed_only_skills || []).join(', ') || '\u2014', sa.listed_only_skills && sa.listed_only_skills.length ? 'warn' : ''],
+      ])
+    + '</div>';
+}
+
+function whiteOk(r) { return (r >= 0.25 && r <= 0.55) ? 'ok' : 'warn'; }
+
+function structCard(title, rows) {
+  var html = '<div class="struct-card"><div class="struct-card-title">' + title + '</div>';
+  rows.forEach(function(r) {
+    var cls = r[2] ? ' ' + r[2] : '';
+    html += '<div class="struct-row"><span class="struct-label">' + r[0] + '</span><span class="struct-val' + cls + '">' + r[1] + '</span></div>';
+  });
+  return html + '</div>';
+}
+
+/* --- History --- */
+function loadHistory() {
+  fetch('/api/history?limit=15').then(function(r) { return r.json(); }).then(function(items) {
+    renderHistory(items);
+  }).catch(function() {});
+}
+
+function renderHistory(items) {
+  var container = document.getElementById('tp-history');
+  if (!items || !items.length) {
+    container.innerHTML = '<p style="color:var(--tx2);font-size:13px">No audit history yet. Run your first audit.</p>';
+    return;
+  }
+  var opts = items.map(function(h) {
+    return '<option value="' + h.id + '">#' + h.id + ' \u2014 ' + esc(h.filename || 'file') + ' (' + (h.cv_quality_total || 0) + ')</option>';
+  }).join('');
+  var html = '<div style="margin-bottom:16px"><label class="field-label" for="diff-sel-a">Compare audits</label>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">'
+    + '<select id="diff-sel-a" class="field-input field-select" style="max-width:200px">' + opts + '</select>'
+    + '<span style="font-size:12px;color:var(--tx2)">vs</span>'
+    + '<select id="diff-sel-b" class="field-input field-select" style="max-width:200px">' + opts + '</select>'
+    + '<button type="button" class="export-btn" onclick="runDiffCompare()">Compare</button></div>'
+    + '<div class="diff-panel" id="diff-panel"><h4>Diff</h4><div id="diff-body"></div></div></div>';
+  items.forEach(function(h) {
+    var score = h.cv_quality_total || 0;
+    var dotColor = score >= 86 ? 'var(--green)' : score >= 65 ? 'var(--amber)' : score >= 45 ? 'var(--amber)' : 'var(--red)';
+    html += '<button type="button" class="hist-item" onclick="loadAudit(' + h.id + ')">';
+    html += '<div class="hist-dot" style="background:' + dotColor + '"></div>';
+    html += '<div class="hist-info">';
+    html += '<div class="hist-name">' + esc(h.filename || 'Untitled') + ' v' + (h.version_number || 1) + '</div>';
+    html += '<div class="hist-meta">#' + h.id + ' \xb7 ' + esc(h.target_role || '') + ' \xb7 ' + timeAgo(h.created_at) + '</div>';
+    html += '</div>';
+    html += '<div class="hist-score">' + score + '</div>';
+    html += '</button>';
+  });
+  container.innerHTML = html;
+}
+
+function runDiffCompare() {
+  var a = document.getElementById('diff-sel-a');
+  var b = document.getElementById('diff-sel-b');
+  if (!a || !b || a.value === b.value) return;
+  fetch('/api/diff?a=' + encodeURIComponent(a.value) + '&b=' + encodeURIComponent(b.value))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var panel = document.getElementById('diff-panel');
+      var body = document.getElementById('diff-body');
+      if (!panel || !body) return;
+      if (d.error) {
+        body.textContent = d.error;
+        panel.classList.add('show');
+        return;
+      }
+      var parts = [];
+      var deltas = d.score_deltas || {};
+      Object.keys(deltas).forEach(function(k) {
+        parts.push('<div class="diff-row"><strong>' + esc(k) + ':</strong> ' + (deltas[k] >= 0 ? '+' : '') + deltas[k] + '</div>');
+      });
+      if ((d.fixed_errors || []).length) {
+        parts.push('<div class="diff-row"><strong>Fixed</strong></div>');
+        d.fixed_errors.forEach(function(e) { parts.push('<div class="diff-row">\u2014 ' + esc(e) + '</div>'); });
+      }
+      if ((d.new_errors || []).length) {
+        parts.push('<div class="diff-row"><strong>New issues</strong></div>');
+        d.new_errors.forEach(function(e) { parts.push('<div class="diff-row">\u2014 ' + esc(e) + '</div>'); });
+      }
+      body.innerHTML = parts.join('') || '<div class="diff-row">No diff details.</div>';
+      panel.classList.add('show');
+    });
+}
+
+function loadAudit(id) {
+  fetch('/api/audit/' + id).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.error) return;
+    lastResult = data;
+    renderResults(data);
+    showTab('overview', document.getElementById('tab-overview'));
+  });
+}
+
+/* --- Tab switching --- */
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.remove('on');
+    t.setAttribute('aria-selected', 'false');
+  });
+  var panel = document.getElementById('tp-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn) {
+    btn.classList.add('on');
+    btn.setAttribute('aria-selected', 'true');
+  }
+}
+
+/* --- Utilities --- */
+function esc(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  var now = new Date();
+  var diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+/* Init */
+showScreen('upload');
+</script>
+
+</body>
+</html>
