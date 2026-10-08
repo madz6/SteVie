@@ -1,0 +1,42 @@
+{
+  "name": "stevie-job-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx server/index.ts",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=.env --import tsx server/index.ts --production",
+    "inbox:import": "node --env-file-if-exists=.env --import tsx scripts/import-inbox.ts",
+    "claude:login": "node scripts/claude-login.mjs",
+    "phone:setup": "node scripts/phone-setup.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "mammoth": "^1.13.0",
+    "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.17.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "web-push": "^3.6.7",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/pdfkit": "^0.17.3",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^4.7.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vite": "^6.3.0"
+  }
+}

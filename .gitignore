@@ -1,15 +1,14 @@
-__pycache__/
-*.py[cod]
-*$py.class
-.Python
-venv/
-.venv/
-env/
+node_modules/
+dist/
+data/
 .env
-*.db
-*.sqlite3
-.idea/
-.vscode/
+.env.*
+!.env.example
 *.log
-.DS_Store
-Thumbs.db
+.runtime/
+job_os_kit/
+# Original audit packets contain private career context; retain them locally.
+docs/review/
+0*.md
+
+.test-portability/
