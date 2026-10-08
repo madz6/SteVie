@@ -27,6 +27,15 @@ This checkpoint supersedes status and validation claims in the historical sectio
 - Native Codex: live connection probe passed. Claude: not signed in. No final CV/cover-letter quality claim is inferred from a connection probe.
 - Browser: current practice flow rendered at phone width; saved fictional draft survived reload. Real device, push delivery and network access remain unverified.
 
+### Publication and final smoke checks
+
+- Uploaded the rebuild to `codex/stevie-job-os` in the requested public `madz6/SteVie` repository. `main` remains unchanged. The review branch proposes replacing the earlier CV-auditor root application; review before merging.
+- [GitHub Actions run 37823472900](https://github.com/madz6/SteVie/actions/runs/37823472900) passed on Linux for implementation commit `f5d3b221bb4c117845f6612c8c1d90794cee653f`.
+- The running production app's Codex connection check returned connected at 18:19 UTC on 8 October.
+- Exporting the actual workspace and previewing the untouched JSON back into the same workspace produced zero conflicts, zero creations and 1,244 skipped existing records. No import was committed. A diagnostic PowerShell deserialize/reserialize changed date strings and produced conflicts; raw JSON preserved the archive correctly.
+- The inbox identity form opens on the production phone-width UI. Record-changing behavior is covered by isolated fixtures rather than modifying real identities for a smoke test.
+- Draft pull request creation was rejected by the GitHub connector with HTTP 403 (resource not accessible by integration). The in-app GitHub browser is signed out. The uploaded branch can still be reviewed directly or compared with `main`; no pull request is claimed.
+
 ### Decisions and confidence
 
 | Area | Confidence in current slice | Limitation / next proof |

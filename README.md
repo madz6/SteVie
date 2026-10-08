@@ -41,7 +41,7 @@ Use **Import & export** to download a versioned JSON workspace archive or applic
 
 Use **Today** for the daily action queue, **Inbox recovery** for ambiguous historical evidence, **Knowledge** for case packs and prior-chat exports, and **Practice** for staged Clarify → Structure → Calculate → Recommend drills. Jumpstart, LinkedIn and Trackr currently open user-reviewed source handoffs; they are not claimed as automated scraping or submission integrations.
 
-On Windows, if `claude` is not recognised, run this once from the project folder:
+On the existing Windows workspace, a project-local Claude client is already present. If `claude` is not recognised there, run this once from the project folder:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\setup-claude.ps1
@@ -49,7 +49,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup-claude.ps1
 
 The script adds the project-local official client to your user PATH and starts its normal sign-in flow. Open a new PowerShell window afterwards if you want to type `claude` directly.
 
-In this workspace, `npm run claude:login` also starts the bundled official client's sign-in without changing PATH. The account owner must complete that sign-in.
+In this workspace, `npm run claude:login` also starts the bundled official client's sign-in without changing PATH. The account owner must complete that sign-in. A fresh GitHub checkout does not include the private `.runtime` folder: install the official Claude Code client separately before signing in.
 
 ## Remote access and iPhone notifications
 
