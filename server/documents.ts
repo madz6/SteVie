@@ -4,7 +4,7 @@ import { documentAuthor, privateDocumentFlags } from './import.js';
 
 export function factualFlags(content:string, evidence:Evidence[],privateSeedPath?:string|null):string[] {
   const flags:string[]=privateDocumentFlags(content,privateSeedPath);
-  if(/\[(?:insert|add|your|metric|confirm|number|TBD)[^\]]*\]|\bTODO\b|\bTBD\b/i.test(content))flags.push('The draft still contains a placeholder.');
+  if(/\[(?:insert|add|your|metric|confirm|number|missing|tbc|TBD)[^\]]*\]|\bTODO\b|\bTBD\b/i.test(content))flags.push('The draft still contains a placeholder.');
   const contactNumbers=[process.env.STEVIE_UK_PHONE||'',process.env.STEVIE_OTHER_PHONE||''].join(' ');
   const allowedNumbers=new Set((evidence.filter(e=>e.status!=='unresolved').map(e=>e.text).join(' ')+' '+contactNumbers+' 2026 2027').match(/\b\d[\d,.]*%?/g)?.map(n=>n.replace(/,/g,''))||[]);
   const unknown=[...new Set((content.match(/\b\d[\d,.]*%?/g)||[]).filter(n=>!allowedNumbers.has(n.replace(/,/g,'')) && !/^[1-9]$/.test(n)))];

@@ -90,3 +90,41 @@ test('changing a supporting source invalidates approval and referenced sources c
     assert.equal((await f.request(`/knowledge/${source.id}`,{},'DELETE')).status,409);
   }finally{f.close();}
 });
+
+test('document reviews record explanations, allow approval and reset when content changes',async()=>{
+  const f=await fixture();try{
+    const role=await (await f.request('/jobs',{company:'Fixture',title:'Analyst'})).json() as Job;
+    const flag='Confirm availability before using this draft.';
+    const doc:Document={id:id(),jobId:role.id,kind:'brief',title:'Fixture brief',content:'Fictional preparation notes.',status:'needs_review',flags:[flag],generationFlags:[flag],provider:'fixture',createdAt:now()};f.store.save('documents',doc);
+    assert.equal((await f.request(`/documents/${doc.id}`,{reviewChecks:[{flag,note:'yes'}]},'PATCH')).status,400);
+    assert.equal((await f.request(`/documents/${doc.id}`,{reviewChecks:[{flag:'invented',note:'Checked against my diary.'}]},'PATCH')).status,422);
+    const response=await f.request(`/documents/${doc.id}`,{reviewChecks:[{flag,note:'Checked the proposed start date against my diary.'}],status:'approved'},'PATCH');
+    assert.equal(response.status,200);const checked=await response.json() as Document;
+    assert.equal(checked.flags.length,0);assert.equal(checked.status,'approved');assert.ok(checked.reviewChecks?.[0].reviewedAt);assert.deepEqual(checked.generationFlags,[flag]);
+    assert.equal((await f.request(`/documents/${doc.id}`,{content:'Changed preparation notes.',reviewChecks:[{flag,note:'Checked against my diary.'}]},'PATCH')).status,422);
+    const edited=await (await f.request(`/documents/${doc.id}`,{content:'Changed preparation notes.'},'PATCH')).json() as Document;
+    assert.equal(edited.status,'needs_review');assert.deepEqual(edited.reviewChecks,[]);assert.deepEqual(edited.flags,[flag]);
+  }finally{f.close();}
+});
+
+test('review notes cannot bypass current placeholders or stale evidence',async()=>{
+  const f=await fixture();try{
+    const role=await (await f.request('/jobs',{company:'Fixture',title:'Analyst'})).json() as Job;
+    const flag='Check missing contact details.';
+    const doc:Document={id:id(),jobId:role.id,kind:'letter',title:'Fixture letter',content:'Email: [MISSING]',status:'needs_review',flags:[flag],generationFlags:[flag],provider:'fixture',createdAt:now()};f.store.save('documents',doc);
+    assert.equal((await f.request(`/documents/${doc.id}`,{reviewChecks:[{flag,note:'I checked the listed contact details.'}],status:'approved'},'PATCH')).status,422);
+    const stale='Supporting source changed after this document was generated. Prepare a new pack from the current sources before approval.';
+    f.store.save('documents',{...doc,content:'No placeholder remains.',generationFlags:[stale],flags:[stale]});
+    assert.equal((await f.request(`/documents/${doc.id}`,{reviewChecks:[{flag:stale,note:'Please ignore the change.'}],status:'approved'},'PATCH')).status,422);
+  }finally{f.close();}
+});
+
+test('career facts can be edited without losing provenance and invalidate dependent drafts',async()=>{
+  const f=await fixture();try{
+    const fact=await (await f.request('/evidence',{category:'Experience',text:'Worked on a fictional project.',source:'Original fixture source'})).json() as {id:string};
+    const doc:Document={id:id(),jobId:'fixture',kind:'brief',title:'Fixture',content:'Prepared notes.',status:'approved',flags:[],generationFlags:['Confirm fact.'],reviewChecks:[{flag:'Confirm fact.',note:'Checked the original source.',reviewedAt:now()}],provider:'fixture',createdAt:now(),evidenceIds:[fact.id]};f.store.save('documents',doc);
+    const response=await f.request(`/evidence/${fact.id}`,{category:'Project',status:'verified'},'PATCH');assert.equal(response.status,200);
+    const saved=await response.json();assert.equal(saved.category,'Project');assert.equal(saved.source,'Original fixture source');
+    const updated=f.store.get<Document>('documents',doc.id)!;assert.equal(updated.status,'needs_review');assert.deepEqual(updated.reviewChecks,[]);
+  }finally{f.close();}
+});

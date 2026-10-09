@@ -1,3 +1,4 @@
+import {canReviewCheck} from '../src/documentChecks.js';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
 import { getStore, id, now, type Store, type Job, type Task, type Document, type Practice, type Contact, type Learning, type Evidence, type Settings, type Profile, type Integration, type KnowledgeItem, type ScoutTarget } from './db.js';
@@ -41,7 +42,7 @@ function invalidateSourceDocuments(store:Store,sourceId:string,kind:'knowledge'|
     const linked=kind==='knowledge'?document.sourceSnapshots?.some(source=>source.id===sourceId):document.evidenceIds?.includes(sourceId);
     if(!linked)continue;
     const warning='Supporting source changed after this document was generated. Prepare a new pack from the current sources before approval.';
-    store.save('documents',{...document,status:'needs_review',generationFlags:[...new Set([...(document.generationFlags??document.flags),warning])],flags:[...new Set([...document.flags,warning])]});
+    store.save('documents',{...document,reviewChecks:[],status:'needs_review',generationFlags:[...new Set([...(document.generationFlags??document.flags),warning])],flags:[...new Set([...document.flags,warning])]});
     const job=store.get<Job>('jobs',document.jobId);
     if(job)store.save('jobs',{...job,needsReview:true,status:job.status==='ready'?'saved':job.status,updatedAt:now()});
   }
@@ -128,12 +129,20 @@ export function createApi(options:{store?:Store}={}) {
   });
   router.patch('/documents/:id',async(req,res)=>{
     const document=requireRecord(store.get<Document>('documents',String(req.params.id)),'Document');
-    const input=z.object({content:text.min(1).max(45000).optional(),status:z.enum(['draft','needs_review','approved']).optional()}).parse(req.body);
+    const input=z.object({content:text.min(1).max(45000).optional(),status:z.enum(['draft','needs_review','approved']).optional(),reviewChecks:z.array(z.object({flag:text.min(1).max(2000),note:text.min(12).max(2000)}).strict()).max(100).optional()}).parse(req.body);
     const content=input.content??document.content;
-    const flags=[...(document.generationFlags??document.flags),...(document.kind==='brief'?[]:factualFlags(content,store.all<Evidence>('evidence')))];
-    if(document.kind==='cv')flags.push(...(await renderPdf({...document,content})).flags);
+    const edited=content!==document.content;
+    const generationFlags=document.generationFlags??document.flags;
+    const hardFlags=document.kind==='brief'?[]:factualFlags(content,store.all<Evidence>('evidence'));
+    if(document.kind==='cv')hardFlags.push(...(await renderPdf({...document,content})).flags);
+    if(edited&&input.reviewChecks?.length)throw new HttpError(422,'Save your text changes first, then review the checks against the updated draft.');
+    if(input.reviewChecks?.some(check=>!generationFlags.includes(check.flag)||!canReviewCheck(check.flag)||hardFlags.includes(check.flag)))throw new HttpError(422,'This check needs a source or content correction before it can be resolved.');
+    const reviewChecks=edited?[]:input.reviewChecks?input.reviewChecks.map(check=>({...check,reviewedAt:now()})):document.reviewChecks??[];
+    const resolved=new Set(reviewChecks.map(check=>check.flag));
+    const flags=[...new Set([...generationFlags.filter(flag=>!resolved.has(flag)||!canReviewCheck(flag)),...hardFlags])];
     if(input.status==='approved'&&flags.length)throw new HttpError(422,`Resolve the document checks before approval: ${flags.join(' ')}`);
-    const updated:Document={...document,...input,content,flags:[...new Set(flags)],status:input.status||(input.content!==undefined?(flags.length?'needs_review':'draft'):document.status)};
+    const status=input.status??(edited?(flags.length?'needs_review':'draft'):flags.length?'needs_review':document.status);
+    const updated:Document={...document,content,status,flags,generationFlags,reviewChecks};
     store.transaction(()=>{
       store.save('documents',updated);
       const documents=store.all<Document>('documents').filter(d=>d.jobId===document.jobId);
@@ -197,7 +206,7 @@ export function createApi(options:{store?:Store}={}) {
   });
   router.patch('/evidence/:id',(req,res)=>{
     const evidence=requireRecord(store.get<Evidence>('evidence',String(req.params.id)),'Evidence');
-    const input=z.object({text:text.min(10).max(6000).optional(),source:short.min(1).optional(),status:z.enum(['verified','user_stated','unresolved']).optional()}).parse(req.body);
+    const input=z.object({category:short.min(1).optional(),text:text.min(10).max(6000).optional(),source:short.min(1).optional(),status:z.enum(['verified','user_stated','unresolved']).optional()}).parse(req.body);
     const updated={...evidence,...input};
     store.transaction(()=>{store.save('evidence',updated);if(JSON.stringify(updated)!==JSON.stringify(evidence))invalidateSourceDocuments(store,evidence.id,'evidence');});
     res.json(updated);

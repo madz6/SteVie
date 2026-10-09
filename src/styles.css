@@ -657,3 +657,12 @@ input[type="checkbox"], input[type="radio"] { min-height: 24px; width: 24px; hei
 .scout-schedule { padding:24px; margin-bottom:24px; overflow-wrap:anywhere; }
 .scout-schedule p { margin:12px 0; line-height:1.65; }
 .scout-schedule form { margin-top:18px; }
+
+.review-checklist { padding: 16px; margin-bottom: 16px; background: var(--cream, #faf7ef); border: 1px solid #deded5; border-radius: 8px; }
+.review-checklist summary { cursor: pointer; font-weight: 600; }
+.review-check { border-top: 1px solid #deded5; padding: 14px 0; }
+.review-check label { display: flex; align-items: flex-start; gap: 12px; }
+.review-check input[type=checkbox] { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 3px; }
+.review-check textarea { width: 100%; min-height: 80px; }
+.evidence-row > .button { flex: 0 0 auto; }
+@media(max-width:680px) { .evidence-row { flex-wrap:wrap; } .evidence-row > div { width:100%; } }

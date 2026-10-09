@@ -303,3 +303,24 @@ Live mailbox sync, Jumpstart Quick Apply, Trackr API integration, automatic Link
 ### First scheduled evening scout - 9 October 2026
 
 The timed chat wake-up ran against the live workspace. One new employer-verified career role was saved and a Claude application task completed with four documents. The employer required an anonymous CV and one stream choice, both retained in the role record; no application was submitted. During export review, CV PDF author metadata was found to reintroduce identity even when the visible text was anonymous. CV exports now omit the hidden Author field entirely; letter author behaviour is unchanged. Regression coverage uses an explicitly configured private author and asserts that a CV PDF has no Author entry. Text still needs user review for indirect identifying details, unsupported claims and employer-specific requirements.
+
+## Evidence editing and actionable draft review - 10 October 2026
+
+### Delivered and decisions
+
+- My evidence now supports adding and editing career facts, contact details, source descriptions, categories and confirmation status. Nothing is automatically declared verified; confirmation is a user action.
+- Reviewed knowledge sources offer an explicit path to add a career fact, with the source reference filled in. The fact starts blank and unconfirmed, so assistant suggestions in old conversations do not silently become candidate achievements.
+- Document review shows the actual linked candidate evidence as well as saved reference excerpts. Candidate evidence is labelled as current data, not an immutable generation snapshot.
+- Review warnings can be resolved with a saved explanation of at least 12 characters. Original generation warnings and review timestamps remain in the record and workspace archive. Review notes record a human decision, not independent verification.
+- Current factual validation, missing placeholders, PDF layout problems and invalid/stale provenance still block approval. Evidence edits invalidate dependent drafts and clear review notes; draft text edits clear old resolutions. Changed sources require a fresh pack.
+- Added bracketed MISSING and TBC placeholder detection. No private facts or contact details were invented or confirmed by the implementation.
+
+### Verification
+
+- TypeScript validation and production build passed; all 49 automated tests passed. New regressions cover review notes, blocked factual/provenance checks, editing resets and evidence updates. The 10 portability tests also passed after adding saved review notes to the round-trip fixture.
+- Using an isolated in-memory workspace with fictional data, added confirmed contact evidence through the UI, resolved a review warning, approved the draft, and verified the saved state. At 390 x 844 the checklist and approval control were usable. The knowledge-to-evidence form retained its source and started with a blank fact and unconfirmed status.
+- No real candidate records were changed during the UI checks, and no new packs or external applications were submitted by these tests.
+
+### Confidence and remaining improvements
+
+High confidence in the tested editing, review-state and archive flows. Medium confidence in content readiness: validation uses heuristics and cannot establish that every claim is true. Review text must be meaningful, even though software can enforce only its presence and length. Physical iPhone testing remains outstanding. Future work includes immutable candidate-evidence snapshots, structured links between extracted facts and their source documents, stronger contextual claim validation, and employer-specific page limits. Mailbox sync, connected platform imports and other previously documented integration gaps remain open.

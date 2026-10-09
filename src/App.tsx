@@ -63,7 +63,7 @@ export default function App() {
         {view==='learning' && <LearningView items={data.learning} onSaved={onSaved}/>}
         {view==='scout' && <ScoutView items={data.scouts} settings={data.settings} onSaved={onSaved}/>}
         {view==='knowledge' && <KnowledgeView items={data.knowledge} onSaved={onSaved}/>}
-        {view==='profile' && <ProfileView profile={data.profile} evidence={data.evidence}/>}
+        {view==='profile' && <ProfileView profile={data.profile} evidence={data.evidence} onSaved={onSaved}/>}
         {view==='connections' && <Connections data={data} onSaved={onSaved}/>}
       </main>
     </div>
