@@ -265,3 +265,37 @@ This section supersedes the earlier backlog notes above for the features complet
 3. Import the user’s case packs and previous ChatGPT/Claude exports through Knowledge, mark only trustworthy sources as reviewed, then start source-based case sessions.
 4. Run `powershell -ExecutionPolicy Bypass -File .\\scripts\\setup-claude.ps1` and sign in through the official client if Claude output is wanted.
 5. Do not publish the public GitHub branch until personal seed filenames and any local-only material have been reviewed; the Gmail snapshot and SQLite database are intentionally ignored by Git.
+
+## Career scouting, review navigation and Claude delivery - 9 October 2026
+
+### Delivered and design decisions
+
+- Career/income/unclassified pipelines are independent of full-time/part-time/contract hours. Existing titles receive visible suggestions; explicit user classifications win. Today and Applications default to career roles. Uncertain records are not silently declared career matches.
+- Application Review clears a stale search, opens the chosen record, and hides the long application list on narrow screens. Document Review carries the document ID in the URL and opens its editor, including on reload. Mark details reviewed persists without changing the application stage.
+- Fixed Claude Code structured output: blocking every tool also blocked its internal StructuredOutput response. Only StructuredOutput is auto-allowed; built-in tools, external MCP, browser access and session persistence remain disabled. A live subscription probe and a real four-document application task succeeded. No API-key fallback was introduced.
+- Career-only scouting uses a Codex chat heartbeat at 09:00, 14:00 and 19:00 Europe/Dublin. Saved role/location preferences are editable in Scout. It relies on the laptop, Codex and SteVie being available; it is not an always-on server crawler.
+- Research ingestion records source URLs, requirements, eligibility notes and verified deadlines; deduplicates URL and employer/title/location; excludes income/ineligible roles; and queues only eligible matches within the preparation cap. Uncertain matches are retained for review. A first researched batch saved two real roles, queued one pack and held one for an eligibility check.
+- User explicitly approved candidate profile/contact data, career evidence, reviewed knowledge excerpts and role requirements going to signed-in Claude Code for the current and future matching career roles. Claude is now the local default. This permission does not include external application submission or outreach.
+- Knowledge explains individual conversation paste and ChatGPT/Claude JSON import. Provider login grants generation access, not access to old conversations. Links alone remain link-only records. No case material is implied to exist before import.
+- Workspace archives preserve classification, working arrangement and scouting preferences, while excluding the external schedule and credentials. Review checks collapse above the document to keep the draft accessible on phones.
+
+### Verification and current evidence
+
+- TypeScript validation and production build passed. All 46 automated tests passed, including new review-state, classification, deadline, malformed historical URL, provider restriction and portability regressions.
+- At a 390 x 844 browser viewport, tested Today -> Review application, Mark details reviewed -> decision disappears, Review document -> actual editor, document reload, and Review inbox evidence -> Inbox recovery. These are browser checks, not physical iPhone testing.
+- One live Claude task saved all four nonempty documents atomically. The CV PDF download returned a valid PDF. Drafts remain needs_review due to missing contact details and unconfirmed evidence/eligibility; generation success is not submission readiness.
+- The additional eligible scout pack also completed with four saved drafts. Eight documents are now saved across two applications; both task records are done. A queued task is never counted as a delivered CV.
+
+### Confidence and remaining work
+
+| Area | Confidence | Remaining limitation |
+|---|---|---|
+| Review navigation | High for tested flows | Physical iPhone/Safari verification still needed; not every historical record was individually opened |
+| Career classification | Medium | Rules suggest purpose from titles; ambiguous titles need user overrides |
+| Claude connection and draft persistence | High on this machine | Subscription availability/rate limits can interrupt future work |
+| CV content | Medium, requires review | Confirm contact details, candidate-stated metrics, skills and eligibility; improve concision and compare against actual employer requirements |
+| Scouting ingestion | High for tested schema/duplicates/holds | Discovery coverage and eligibility assessment depend on source quality and agent research |
+| Recurring execution | Medium | Schedule configured; a future timed wake-up and phone notification have not yet been observed |
+| Chat imports | Medium-high | Large exports need splitting; private chat links do not grant readable content |
+
+Live mailbox sync, Jumpstart Quick Apply, Trackr API integration, automatic LinkedIn collection, and always-on hosting remain unfinished. Inbox recovery is still a partial historical snapshot. This update does not claim a complete A-Z job service.

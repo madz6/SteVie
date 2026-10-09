@@ -17,12 +17,12 @@ type View = 'today'|'applications'|'practice'|'people'|'learning'|'scout'|'knowl
 const navigation:{id:View;label:string;icon:ComponentType<{size?:number;strokeWidth?:number}>}[] = [
   {id:'today',label:'Today',icon:LayoutDashboard},{id:'applications',label:'Applications',icon:BriefcaseBusiness},{id:'practice',label:'Practice',icon:CircleHelp},{id:'inbox',label:'Inbox recovery',icon:Inbox},{id:'people',label:'People',icon:Users},{id:'learning',label:'Learning',icon:GraduationCap},{id:'scout',label:'Scout',icon:Radar},{id:'knowledge',label:'Knowledge base',icon:BookOpen},{id:'profile',label:'My evidence',icon:ShieldCheck},{id:'data',label:'Import & export',icon:Database},{id:'connections',label:'Connections',icon:Settings2},
 ];
-function route(){const params=new URLSearchParams(window.location.search);const value=params.get('view');return {view:navigation.some(item=>item.id===value)?value as View:'today' as View,jobId:params.get('job')};}
+function route(){const params=new URLSearchParams(window.location.search);const value=params.get('view');return {view:navigation.some(item=>item.id===value)?value as View:'today' as View,jobId:params.get('job'),documentId:params.get('document')};}
 
 export default function App() {
   const [data,setData]=useState<Bootstrap|null>(null), [loadError,setLoadError]=useState<string|null>(null), [notice,setNotice]=useState('');
   const [view,setView]=useState<View>(()=>route().view), [jobId,setJobId]=useState<string|null>(()=>route().jobId), [query,setQuery]=useState(''), [addJob,setAddJob]=useState(false), [mobileMore,setMobileMore]=useState(false);
-  const [refreshing,setRefreshing]=useState(false);
+  const [refreshing,setRefreshing]=useState(false),[documentId,setDocumentId]=useState<string|null>(()=>route().documentId);
   const mounted=useRef(true);
   const refresh=useCallback(async()=>{
     try { const result=await api<Bootstrap>('/bootstrap'); if(!result.profile||!result.settings||!['jobs','tasks','documents','practice','contacts','learning','evidence','knowledge','scouts','activity','integrations'].every(key=>Array.isArray(result[key as keyof Bootstrap])))throw new Error('An older SteVie server is running. Stop it in its terminal and restart from the SteVie Reboot folder, then reload this page. Your saved data is unchanged.'); if(mounted.current){setData(result);setLoadError(null);} }
@@ -32,9 +32,9 @@ export default function App() {
   const hasWork=!!data?.tasks.some(task=>task.status==='queued'||task.status==='running');
   useEffect(()=>{if(!hasWork)return;const timer=window.setInterval(()=>void refresh(),3000);return()=>window.clearInterval(timer);},[hasWork,refresh]);
   useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),5500);return()=>window.clearTimeout(timer);},[notice]);
-  const navigate=(next:View,id:string|null=next==='applications'?jobId:null,focus=true)=>{const url=new URL(window.location.href);url.searchParams.set('view',next);if(id)url.searchParams.set('job',id);else url.searchParams.delete('job');url.hash='';if(url.href!==window.location.href)window.history.pushState({},'',url);setView(next);setJobId(id);setMobileMore(false);window.scrollTo({top:0,behavior:'instant'});if(focus)requestAnimationFrame(()=>document.getElementById('main-content')?.focus());};
-  const openJob=(id:string)=>navigate('applications',id);
-  useEffect(()=>{const onPop=()=>{const next=route();setView(next.view);setJobId(next.jobId);setMobileMore(false);requestAnimationFrame(()=>document.getElementById('main-content')?.focus());};window.addEventListener('popstate',onPop);return()=>window.removeEventListener('popstate',onPop);},[]);
+  const navigate=(next:View,id:string|null=next==='applications'?jobId:null,focus=true,docId:string|null=null)=>{const url=new URL(window.location.href);url.searchParams.set('view',next);if(id)url.searchParams.set('job',id);else url.searchParams.delete('job');if(docId)url.searchParams.set('document',docId);else url.searchParams.delete('document');setDocumentId(docId);url.hash='';if(url.href!==window.location.href)window.history.pushState({},'',url);setView(next);setJobId(id);setMobileMore(false);window.scrollTo({top:0,behavior:'instant'});if(focus)requestAnimationFrame(()=>document.getElementById('main-content')?.focus());};
+  const openJob=(id:string,docId?:string)=>{setQuery('');navigate('applications',id,true,docId||null);};
+  useEffect(()=>{const onPop=()=>{const next=route();setView(next.view);setJobId(next.jobId);setDocumentId(next.documentId);setMobileMore(false);requestAnimationFrame(()=>document.getElementById('main-content')?.focus());};window.addEventListener('popstate',onPop);return()=>window.removeEventListener('popstate',onPop);},[]);
   useEffect(()=>{document.title=`${navigation.find(item=>item.id===view)?.label||'Workspace'} · SteVie`;},[view]);
   useEffect(()=>{if(!mobileMore)return;const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape'){setMobileMore(false);document.getElementById('mobile-more-toggle')?.focus();}};document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey);},[mobileMore]);
   const onSaved=async(message:string)=>{await refresh();setNotice(message);};
@@ -55,7 +55,7 @@ export default function App() {
       <main id="main-content" className={`main-content view-${view}`} tabIndex={-1}>
         {loadError && <div className="sync-error"><ErrorMessage error={`The workspace couldn't refresh. Your last loaded information is shown. ${loadError}`}/></div>}
         {view==='today' && <MissionControl data={data} openJob={openJob} navigate={navigate} addJob={()=>setAddJob(true)} refresh={refresh}/>}
-        {view==='applications' && <Applications data={data} selectedJob={selectedJob} onSelect={id=>navigate('applications',id)} query={query} setQuery={setQuery} addJob={()=>setAddJob(true)} onSaved={onSaved}/>}
+        {view==='applications' && <Applications documentId={documentId} data={data} selectedJob={selectedJob} onSelect={id=>navigate('applications',id)} query={query} setQuery={setQuery} addJob={()=>setAddJob(true)} onSaved={onSaved}/>}
         {view==='inbox' && <Recovery jobs={data.jobs} onSaved={onSaved} openJob={openJob}/>}
         {view==='data' && <DataTransfer onSaved={onSaved}/>}
         {view==='practice' && <PracticeView data={data} onSaved={onSaved}/>}

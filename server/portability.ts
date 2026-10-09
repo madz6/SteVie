@@ -1,3 +1,4 @@
+import { scoutingPreferences } from './scouting.js';
 import { createHash, randomBytes } from 'node:crypto';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
@@ -23,7 +24,7 @@ const practiceSource = z.object({ ...sourceFields, content: text, truncated: z.b
 // Validate optional fields too: the UI consumes progress, snapshots and flags
 // directly. Unknown fields must not bypass the supported archive schema.
 const schemas: Record<string, z.ZodType> = {
-  jobs: z.object({ id: identifier, company: text, title: text, location: text, source: text, url: text, status: z.enum(['saved','preparing','ready','applied','interviewing','offer','rejected','archived','unknown']), deadline: nullableText, description: text, notes: text, fit: z.number().finite().nullable(), fitReason: text, createdAt: timestamp, updatedAt: timestamp, needsReview: z.boolean() }).strict(),
+  jobs: z.object({ track:z.enum(['career','income','unclassified']).optional(), employmentType:z.enum(['full_time','part_time','contract','internship','unknown']).optional(), id: identifier, company: text, title: text, location: text, source: text, url: text, status: z.enum(['saved','preparing','ready','applied','interviewing','offer','rejected','archived','unknown']), deadline: nullableText, description: text, notes: text, fit: z.number().finite().nullable(), fitReason: text, createdAt: timestamp, updatedAt: timestamp, needsReview: z.boolean() }).strict(),
   tasks: z.object({ id: identifier, kind: z.enum(['application','practice','scout']), jobId: nullableId, status: z.enum(['queued','running','done','failed']), error: nullableText, createdAt: timestamp, finishedAt: timestamp.nullable(), provider: providers.optional(), practiceId: identifier.optional(), attempts: z.number().int().min(0).optional(), restoredStatus: z.enum(['queued','running']).optional() }).strict(),
   documents: z.object({ id: identifier, jobId: identifier, kind: z.enum(['cv','letter','answers','brief']), title: text, content: text, status: z.enum(['draft','needs_review','approved']), createdAt: timestamp, provider: text, flags: strings, evidenceIds: z.array(identifier).max(500).optional(), generationFlags: strings.optional(), sourceSnapshots: z.array(documentSource).max(500).optional() }).strict(),
   practice: z.object({ id: identifier, jobId: nullableId, kind: text, title: text, prompt: text, answer: text, feedback: nullableText, score: z.number().finite().nullable(), status: text, createdAt: timestamp, knowledgeId: nullableId.optional(), draftAnswer: z.string().max(16000).optional(), stage: stage.optional(), stageAnswers: z.partialRecord(stage, text).optional(), timer: z.object({ mode: z.enum(['untimed','timed']), elapsedSeconds: z.number().int().min(0).max(604800) }).strict().optional(), sourceSnapshot: practiceSource.optional(), sourceLabel: text.optional(), synthetic: z.boolean().optional() }).strict(),
@@ -39,7 +40,7 @@ const schemas: Record<string, z.ZodType> = {
 const profileSchema = z.object({ name: text, headline: text, location: text }).strict();
 const settingsSchema = z.object({ provider: providers, jumpstartUrl: text, trackrUrl: text, linkedinUrl: text, dailyLimit: z.number().int().min(1).max(100) }).strict();
 const coverageSchema = z.object({ checkedAt: timestamp, query: text, pages: z.number().int().min(0), messages: z.number().int().min(0), oldest: nullableText, newest: nullableText, complete: z.boolean(), detail: text }).strict();
-const metadataSchema = z.object({ profile: profileSchema.optional(), settings: settingsSchema.optional(), inboxCoverage: coverageSchema.optional() }).strict();
+const metadataSchema = z.object({ scoutingPreferences:scoutingPreferences.optional(), profile: profileSchema.optional(), settings: settingsSchema.optional(), inboxCoverage: coverageSchema.optional() }).strict();
 const bundleSchema = z.object({
   format: z.literal('stevie-workspace'), version: z.literal(1), exportedAt: timestamp,
   records: z.array(z.object({ id: identifier, type: z.string().refine(value => Object.hasOwn(schemas, value), 'Unsupported record type.'), data: z.record(z.string(), z.unknown()) }).strict()).max(MAX_RECORDS),
@@ -80,6 +81,7 @@ function metadata(store: Store): Metadata {
   return metadataSchema.parse({
     profile: pick('profile', ['name','headline','location']),
     settings: pick('settings', ['provider','jumpstartUrl','trackrUrl','linkedinUrl','dailyLimit']),
+    scoutingPreferences: store.meta('scoutingPreferences'),
     inboxCoverage: pick('inboxCoverage', ['checkedAt','query','pages','messages','oldest','newest','complete','detail']),
   });
 }

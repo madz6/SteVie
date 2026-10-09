@@ -15,6 +15,20 @@ async function fixture() {
   return {store,request,close:()=>{server.closeAllConnections();server.close();store.close();}};
 }
 
+test('reviewing imported details preserves stage and persists the chosen pipeline',async()=>{
+  const f=await fixture();try{
+    const created=await f.request('/jobs',{company:'Fixture',title:'Graduate Analyst',description:'Fictional role'});
+    const job=await created.json() as Job;
+    f.store.save('jobs',{...job,status:'interviewing',needsReview:true});
+    const reviewed=await f.request(`/jobs/${job.id}`,{needsReview:false,track:'career',employmentType:'part_time'},'PATCH');
+    assert.equal(reviewed.status,200);
+    const saved=await reviewed.json() as Job;
+    assert.equal(saved.needsReview,false);assert.equal(saved.status,'interviewing');
+    assert.equal(saved.track,'career');assert.equal(saved.employmentType,'part_time');
+    assert.equal((await f.request(`/jobs/${job.id}`,{track:'invalid'},'PATCH')).status,400);
+  }finally{f.close();}
+});
+
 test('retry keeps the originally selected provider even when workspace default changes',async()=>{
   const f=await fixture();try{
     const task:Task={id:id(),kind:'practice',jobId:null,status:'failed',provider:'codex',error:'Temporary outage',createdAt:now(),finishedAt:now()};

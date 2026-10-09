@@ -7,6 +7,7 @@ import { providerStatuses, testProvider, generateApplication, coachPractice } fr
 import { createInboxRouter, type InboxCoverage } from './inbox.js';
 import { createPortabilityRouter } from './portability.js';
 import { parseKnowledgeUpload, retrieveKnowledge } from './knowledge.js';
+import { createScoutingRouter } from './scouting.js';
 import { buildPractice } from './practice.js';
 export { buildPractice } from './practice.js';
 
@@ -16,8 +17,8 @@ const url=text.max(2000).refine(value=>!value||/^https?:\/\/[^\s]+$/i.test(value
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value=>{const parsed=new Date(value+'T12:00:00Z');return Number.isFinite(parsed.valueOf())&&parsed.toISOString().slice(0,10)===value;},'Use a valid calendar date.').nullable();
 const providers=z.enum(['codex','claude-code','openai','anthropic']);
 const statuses=z.enum(['saved','preparing','ready','applied','interviewing','offer','rejected','archived','unknown']);
-const jobInput=z.object({company:short.min(1),title:short.min(1),location:short.optional(),url:url.optional(),source:short.optional(),description:text.max(45000).optional(),deadline:date.optional(),notes:text.max(12000).optional()});
-const jobPatch=jobInput.omit({source:true}).partial().extend({status:statuses.optional()});
+const jobInput=z.object({track:z.enum(['career','income','unclassified']).optional(),employmentType:z.enum(['full_time','part_time','contract','internship','unknown']).optional(),company:short.min(1),title:short.min(1),location:short.optional(),url:url.optional(),source:short.optional(),description:text.max(45000).optional(),deadline:date.optional(),notes:text.max(12000).optional()});
+const jobPatch=jobInput.omit({source:true}).partial().extend({status:statuses.optional(),needsReview:z.boolean().optional()});
 class HttpError extends Error {constructor(public status:number,message:string){super(message);}}
 function requireRecord<T>(item:T|undefined,label:string):T {if(!item)throw new HttpError(404,`${label} not found.`);return item;}
 function normalizedUrl(value:string):string {
@@ -75,6 +76,7 @@ export function createApi(options:{store?:Store}={}) {
   router.use('/portability',createPortabilityRouter(store));
   router.use(express.json({limit:'25mb'}));
   router.use('/inbox',createInboxRouter(store));
+  router.use('/scouting',createScoutingRouter(store,job=>dailyRoom(store)?queueTask(store,'application',job.id,store.meta<Settings>('settings')!.provider):undefined));
   router.get('/health',(_req,res)=>res.json({ok:true}));
   router.get('/access',(_req,res)=>{
     const value=process.env.STEVIE_PUBLIC_URL;
@@ -92,7 +94,7 @@ export function createApi(options:{store?:Store}={}) {
   });
   router.post('/jobs',(req,res)=>{
     const input=jobInput.parse(req.body);
-    const job:Job={id:id(),company:input.company,title:input.title,location:input.location||'',source:input.source||'Added by you',url:normalizedUrl(input.url||''),description:input.description||'',notes:input.notes||'',deadline:input.deadline||null,status:'saved',fit:null,fitReason:'Not assessed',needsReview:false,createdAt:now(),updatedAt:now()};
+    const job:Job={id:id(),track:input.track,employmentType:input.employmentType,company:input.company,title:input.title,location:input.location||'',source:input.source||'Added by you',url:normalizedUrl(input.url||''),description:input.description||'',notes:input.notes||'',deadline:input.deadline||null,status:'saved',fit:null,fitReason:'Not assessed',needsReview:false,createdAt:now(),updatedAt:now()};
     store.transaction(()=>{store.save('jobs',job);store.activity(`Saved ${job.title} at ${job.company}.`);});
     res.status(201).json(job);
   });
@@ -101,7 +103,7 @@ export function createApi(options:{store?:Store}={}) {
     const patch=jobPatch.parse(req.body);
     if(patch.status==='preparing')throw new HttpError(422,'Use Prepare pack to start preparation.');
     if(patch.status==='ready'&&store.all<Document>('documents').filter(d=>d.jobId===job.id).length===0)throw new HttpError(422,'Prepare and review documents before marking the opportunity ready.');
-    const updated={...job,...patch,url:patch.url!==undefined?normalizedUrl(patch.url):job.url,updatedAt:now(),needsReview:patch.status?false:job.needsReview};
+    const updated={...job,...patch,url:patch.url!==undefined?normalizedUrl(patch.url):job.url,updatedAt:now(),needsReview:patch.needsReview??(patch.status?false:job.needsReview)};
     store.transaction(()=>{store.save('jobs',updated);if(patch.status&&patch.status!==job.status)store.activity(`${job.company}: ${patch.status}.`);});
     res.json(updated);
   });

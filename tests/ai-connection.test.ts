@@ -22,3 +22,19 @@ test('Codex native probe uses valid feature switches and never inherits metered 
     assert.equal((await service.testProvider('codex')).status,'connected');assert.equal(probes,1);
   }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('Claude structured responses are allowed without granting built-in tools',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'stevie-claude-test-'));
+  try{
+    const service=createAiService({runtimeRoot:root,env:{PATH:process.env.PATH},resolveCommand:async()=>({command:'fixture-client',prefix:[]}),run:async request=>{
+      if(request.args.includes('auth'))return {code:0,stdout:JSON.stringify({loggedIn:true,authMethod:'claude.ai'}),stderr:''};
+      assert.equal(request.args[request.args.indexOf('--tools')+1],'');
+      assert.equal(request.args[request.args.indexOf('--allowedTools')+1],'StructuredOutput');
+      assert.ok(request.args.includes('--restricted'));assert.ok(request.args.includes('--safe-mode'));
+      assert.equal(request.args[request.args.indexOf('--permission-mode')+1],'dontAsk');
+      assert.equal(request.args.includes('--disallowedTools'),false);
+      return {code:0,stdout:JSON.stringify({is_error:false,structured_output:{ok:true}}),stderr:''};
+    }});
+    assert.equal((await service.testProvider('claude-code')).status,'connected');
+  }finally{await rm(root,{recursive:true,force:true});}
+});

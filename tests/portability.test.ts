@@ -12,7 +12,9 @@ function role(id = 'job-one'): Job {
   return { id, company: 'Example Employer', title: 'Analyst', location: 'Dublin', source: 'Fictional fixture', url: 'https://example.invalid/jobs/' + id, status: 'saved' as const, deadline: null, description: 'Fictional role description', notes: '', fit: null, fitReason: '', createdAt: stamp, updatedAt: stamp, needsReview: false };
 }
 function seed(store: Store) {
-  store.save('jobs', role());
+  store.save('jobs', {...role(),track:'career',employmentType:'full_time'});
+  store.setMeta('scoutingPreferences',{roles:['Analyst'],locations:['Dublin'],notes:'Fixture'});
+  store.setMeta('scoutingSchedule',{enabled:true,automationId:'must-never-export'});
   const material: KnowledgeItem = { id: 'knowledge-one', title: 'Fictional case', kind: 'case', url: '', content: 'A fictional repair shop has five bookings. Estimate its capacity.', source: 'Fictional source', tags: ['fixture'], status: 'reviewed', createdAt: stamp, updatedAt: stamp };
   store.save('knowledge', material);
   store.save<Evidence>('evidence', { id: 'evidence-one', category: 'Project', text: 'Researched a fictional product.', source: 'Fictional source', status: 'verified' });
@@ -57,12 +59,12 @@ test('portable archive round trip preserves source references and inbox records 
     const download = await from.get('/export'); assert.equal(download.status, 200); assert.match(download.headers.get('content-disposition')!, /attachment/);
     const bundle = await download.json();
     assert.equal(bundle.format, 'stevie-workspace'); assert.equal(bundle.version, 1);
-    assert.deepEqual(Object.keys(bundle.metadata).sort(), ['inboxCoverage','profile','settings']);
+    assert.deepEqual(Object.keys(bundle.metadata).sort(), ['inboxCoverage','profile','scoutingPreferences','settings']);
     assert.equal(bundle.metadata.inboxCoverage.nextPageToken, undefined);
     assert.ok(!JSON.stringify(bundle).includes('must-never-export'));
     assert.deepEqual(source.all<InboxMessage>('inbox_messages').map(message => message.confidence).sort(), ['high','low','medium']);
     const previewResponse = await to.post('/preview', { bundle }); assert.equal(previewResponse.status, 200);
-    const preview = await previewResponse.json(); const total = bundle.records.length + 3;
+    const preview = await previewResponse.json(); const total = bundle.records.length + 4;
     assert.deepEqual(preview.summary, { create: total, skip: 0, conflict: 0 });
     assert.ok(preview.warnings.some((warning: string) => warning.includes('untouched starter profile')));
     assert.equal(destination.all('jobs').length, 0);

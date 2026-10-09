@@ -56,6 +56,7 @@ Use plain British/Irish English and direct first-person writing where appropriat
 Respect candidate accuracy constraints supplied in context. If historical drafts conflict with supplied evidence or stated exclusions, flag the conflict and omit the unsupported claim.`;
 
 const APPLICATION_TASK = `Prepare an honest, targeted application pack in Markdown. Produce a concise CV, a tailored cover letter, three useful draft application answers, and an interview/research brief.
+CV bullets use compact action-led phrasing without I/my; first person belongs in the letter and answers. Prioritise the most relevant evidence rather than listing every project. Keep eligibility questions and uncertain intentions in flags/the brief, not as asserted CV facts.
 Every factual candidate paragraph/bullet in cv, letter and answers must end with one or more [evidence:ID] markers using the exact supporting record IDs. Reuse factual wording closely; do not turn activity into measured impact. Markers are metadata removed before display. Include every cited ID in evidenceIds and only IDs actually used. Do not cite role requirements as candidate evidence. Use verified evidence preferentially. If a user_stated fact is used, add a flag that it needs confirmation. Unresolved evidence is excluded and must not be reconstructed from context.
 Write brief sections for role requirements, evidence to discuss, gaps/eligibility to check, and questions to ask. Distinguish facts supplied in the job description from unknown company information. Do not claim to have checked the live vacancy. If the description is absent, flag it and avoid pretending the pack is tailored to unstated requirements.
 Fit is an approximate evidence-to-role match from 0 to 100, never a hiring probability. Explain both matches and gaps in fitReason. Empty evidence, unsupported requirements, unconfirmed facts and placeholders must produce explicit flags. Do not fill gaps with inventions. When facts are too thin, still give a useful minimal draft with clearly labelled missing information.
@@ -189,6 +190,7 @@ function failureMessage(id: ProviderId, output: string, status?: number): string
   if (status === 429 || /rate.?limit|usage limit|quota|credit balance/i.test(output)) return `${NAMES[id]} has reached a usage or credit limit. Wait for the reset or choose another configured provider.`;
   if (status === 404 || /model.*(?:not found|not available|not supported)/i.test(output)) return `${NAMES[id]} cannot use the configured model. Check the model setting.`;
   if (/timed? ?out|timeout/i.test(output)) return `${NAMES[id]} timed out. Retry the task when the connection is available.`;
+  if (/permission_denials.*StructuredOutput|error_max_turns/i.test(output)) return `${NAMES[id]} could not finish its structured response. Retry after checking the SteVie adapter configuration.`;
   if (/error loading config|unrecognized (?:argument|option)|unknown (?:option|feature)/i.test(output)) return `${NAMES[id]} rejected the client's launch configuration. Update the SteVie client adapter before retrying.`;
   return `${NAMES[id]} could not complete the request${status ? ` (HTTP ${status})` : ''}. Check the connection and retry. No draft was substituted.`;
 }
@@ -329,7 +331,7 @@ export function createAiService(dependencies: Dependencies = {}) {
       } else {
         // Use the actual native client and its own sign-in; never intermediate tokens.
         // https://code.claude.com/docs/en/cli-reference
-        args = ['--print', '--safe-mode', '--restricted', '--tools', '', '--disallowedTools', '*', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--setting-sources', '', '--no-session-persistence', '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--max-turns', '2', '--output-format', 'json', '--json-schema', JSON.stringify(schema), '--system-prompt', SYSTEM_PROMPT,
+        args = ['--print', '--safe-mode', '--restricted', '--tools', '', '--allowedTools', 'StructuredOutput', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--setting-sources', '', '--no-session-persistence', '--no-chrome', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--max-turns', '4', '--output-format', 'json', '--json-schema', JSON.stringify(schema), '--system-prompt', SYSTEM_PROMPT,
           ...(env.STEVIE_CLAUDE_MODEL ? ['--model', env.STEVIE_CLAUDE_MODEL] : [])];
       }
       const result = await run({ command: command.command, args: [...command.prefix, ...args], cwd: folder, env: nativeEnvironment(env), stdin: prompt, timeoutMs: duration, jsonEvents: id === 'codex' });

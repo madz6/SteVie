@@ -648,3 +648,12 @@ input[type="checkbox"], input[type="radio"] { min-height: 24px; width: 24px; hei
   .practice-prompt { padding: 16px; margin-top: 16px; }
   .practice-session .panel-heading { flex-wrap: wrap; gap: 12px; }
 }
+
+.pipeline-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
+.pipeline-tabs button[aria-pressed="true"] { background:var(--green-dark); color:white; }
+.role-classification { display:grid; gap:10px; }
+@media (max-width:680px) { .applications-layout.has-selection .applications-list { display:none; } .pipeline-tabs { gap:6px; } .pipeline-tabs .button { flex:1 1 45%; } }
+
+.scout-schedule { padding:24px; margin-bottom:24px; overflow-wrap:anywhere; }
+.scout-schedule p { margin:12px 0; line-height:1.65; }
+.scout-schedule form { margin-top:18px; }

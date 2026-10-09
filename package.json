@@ -14,7 +14,8 @@
     "claude:login": "node scripts/claude-login.mjs",
     "phone:setup": "node scripts/phone-setup.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "scout:submit": "node scripts/scout-submit.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",
