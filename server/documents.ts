@@ -37,7 +37,9 @@ export async function renderPdf(document:Pick<Document,'content'|'title'|'kind'>
   const contentLines=lines(document.content);
   let fontSize=document.kind==='cv'?10.3:11;
   if(document.kind==='cv')while(fontSize>9.3&&measure(contentLines,fontSize)>783)fontSize=Math.round((fontSize-0.2)*10)/10;
-  const author=documentAuthor(privateSeedPath);
+  // CVs may be submitted to anonymous screening. Never reintroduce a candidate
+  // identity through hidden PDF metadata, even when it is absent from the text.
+  const author=document.kind==='cv'?'':documentAuthor(privateSeedPath);
   const pdf=new PDFDocument({size:'A4',margins,bufferPages:true,info:{Title:document.title,...(author?{Author:author}:{}),Creator:'SteVie'}});
   const chunks:Buffer[]=[];
   const finished=new Promise<Buffer>((resolve,reject)=>{pdf.on('data',(chunk:Buffer)=>chunks.push(chunk));pdf.on('end',()=>resolve(Buffer.concat(chunks)));pdf.on('error',reject);});

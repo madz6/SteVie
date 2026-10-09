@@ -130,6 +130,8 @@ test('private candidate validation and rendering metadata load only from the con
     assert.ok(factualFlags('I achieved a 6.4% revenue uplift.',[evidence()],seedPath).some(flag=>flag.includes('projected')));
     assert.equal(factualFlags('I have ForecastKit experience.',[evidence()],null).length,0);
     assert.deepEqual(privateDocumentFlags('LegacyTool',seedPath,'provider'),['Confirm the fictional provider-only claim.']);assert.deepEqual(privateDocumentFlags('LegacyTool',seedPath),[]);
+    const anonymousCv=await renderPdf({kind:'cv',title:'Anonymous CV',content:'Fictional anonymous CV.'},seedPath);
+    assert.doesNotMatch(anonymousCv.buffer.toString('latin1'),/\/Author\b/);
     const pdf=await renderPdf({kind:'letter',title:'Author fixture',content:'Fictional letter.'},seedPath);
     if(!process.env.STEVIE_PROFILE_NAME)assert.match(pdf.buffer.toString('latin1'),/\/Author\s+\d+\s+0\s+R[\s\S]*\(Example Author\)|\(Example Author\)[\s\S]*\/Author\s+\d+\s+0\s+R/);
     writeFileSync(seedPath,JSON.stringify({schemaVersion:1,documentRules:[{pattern:'[',message:'Broken rule'}]}));

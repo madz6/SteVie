@@ -299,3 +299,7 @@ This section supersedes the earlier backlog notes above for the features complet
 | Chat imports | Medium-high | Large exports need splitting; private chat links do not grant readable content |
 
 Live mailbox sync, Jumpstart Quick Apply, Trackr API integration, automatic LinkedIn collection, and always-on hosting remain unfinished. Inbox recovery is still a partial historical snapshot. This update does not claim a complete A-Z job service.
+
+### First scheduled evening scout - 9 October 2026
+
+The timed chat wake-up ran against the live workspace. One new employer-verified career role was saved and a Claude application task completed with four documents. The employer required an anonymous CV and one stream choice, both retained in the role record; no application was submitted. During export review, CV PDF author metadata was found to reintroduce identity even when the visible text was anonymous. CV exports now omit the hidden Author field entirely; letter author behaviour is unchanged. Regression coverage uses an explicitly configured private author and asserts that a CV PDF has no Author entry. Text still needs user review for indirect identifying details, unsupported claims and employer-specific requirements.
