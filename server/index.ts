@@ -37,7 +37,7 @@ const server=app.listen(port,host,error=>{
   if(error){notifications.close();console.error(`SteVie could not listen on ${host}:${port}. Stop the older server before starting this build.`);process.exit(1);return;}
   console.log(`SteVie is running at ${process.env.STEVIE_PUBLIC_URL||`http://${host}:${port}`}`);
   stop=startWorker({onComplete:async event=>{
-  await notifications.send('SteVie · ready for you',event.kind==='practice'?'Your practice feedback is ready.':'Your application pack is ready to review.',event.kind==='practice'?'/?view=practice':'/?view=applications',`${event.kind}:${event.jobId || ''}:${event.text}`);
+  await notifications.send(event.kind==='failure'?'SteVie · needs attention':'SteVie · update',event.text,event.kind==='scout'?'/?view=scout':event.kind==='practice'?'/?view=practice':event.jobId?`/?view=applications&job=${event.jobId}`:'/?view=scout',`${event.kind}:${event.jobId || ''}:${event.text}`);
   }});
 });
 function shutdown(){stop();notifications.close();server.close(()=>process.exit(0));}

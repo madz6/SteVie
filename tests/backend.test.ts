@@ -28,7 +28,7 @@ test('application worker creates four real documents atomically, cites evidence,
   const store=createStore(':memory:',false);const role=job({status:'applied'});const fact=evidence();store.save('jobs',role);store.save('evidence',fact);const pending=task(role.id);store.save('tasks',pending);
   const cv='# Example Candidate\n\n## Education\nNorthbridge College BA Business Studies\n- Designed a survey with 82 valid responses.';
   let calls=0;
-  const generated={cv,letter:'Dear hiring team,\nI studied Business Studies and developed a survey-led research project.\nExample Candidate',answers:'I use evidence to structure an ambiguous problem.',brief:'Ask about client project ownership.',fit:74,fitReason:'Research evidence supports the role.',evidenceIds:[fact.id],flags:[]};
+  const generated={cv,letter:'Dear hiring team,\nI studied Business Studies and developed a survey-led research project.\nExample Candidate',answers:'I use evidence to structure an ambiguous problem, explain assumptions clearly and identify what further information is needed.',brief:'Ask about client project ownership, the expectations for a new graduate and how the team reviews research quality.',fit:74,fitReason:'Research evidence supports the role.',evidenceIds:[fact.id],flags:[]};
   await processOneTask(store,{generateApplication:async(input)=>{calls++;assert.equal(input.evidence.length,1);assert.ok(!input.context.includes('journal.txt'));return generated;},coachPractice:async()=>{throw new Error('Unexpected coaching call');}});
   assert.equal(calls,1);assert.equal(store.all<Document>('documents').length,4);assert.equal(store.get<Task>('tasks',pending.id)?.status,'done');assert.equal(store.get<Job>('jobs',role.id)?.status,'applied');
   assert.equal(await processOneTask(store,{generateApplication:async()=>{throw new Error('Must not call again');},coachPractice:async()=>{throw new Error('Must not call again');}}),false);
@@ -38,7 +38,7 @@ test('application worker creates four real documents atomically, cites evidence,
 test('unsupported claims and invalid evidence references keep generated documents out of ready',async()=>{
   const store=createStore(':memory:',false);const role=job({status:'preparing'});store.save('jobs',role);store.save('evidence',evidence());store.save('tasks',task(role.id));
   await processOneTask(store,{generateApplication:async()=>({cv:'# Example Candidate\nSkills: ForecastKit.\nAchieved 18.6% revenue growth.',letter:'I delivered 41% time savings.',answers:'I built a system used by 999 customers.',brief:'Review the employer.',fit:95,fitReason:'Fit estimate',evidenceIds:['invented-id'],flags:[]}),coachPractice:async()=>({feedback:'',score:0})});
-  assert.equal(store.get<Job>('jobs',role.id)?.status,'saved');assert.equal(store.get<Job>('jobs',role.id)?.needsReview,true);assert.ok(store.all<Document>('documents').every(d=>d.flags.length>0&&d.status==='needs_review'));store.close();
+  assert.equal(store.get<Job>('jobs',role.id)?.status,'saved');assert.equal(store.get<Job>('jobs',role.id)?.needsReview,true);assert.equal(store.all<Document>('documents').length,0);assert.equal(store.all<Task>('tasks')[0].status,'failed');store.close();
 });
 
 test('provider failure leaves no partial application, stores an actionable redacted error, and can be retried',async()=>{

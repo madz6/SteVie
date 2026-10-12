@@ -1,3 +1,4 @@
+import {NativeScout} from './NativeScout';
 import {useEffect,useState,type FormEvent} from 'react';
 import {api} from './api';
 import {dateLabel,ErrorMessage,Field,Spinner} from './components';
@@ -8,12 +9,9 @@ export function ScoutSchedule(){
   async function load(){try{setState(await api<State>('/scouting'));setError(null);}catch(e){setError((e as Error).message);}}
   useEffect(()=>{void load();const timer=setInterval(()=>void load(),60000);return()=>clearInterval(timer);},[]);
   async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget);setBusy(true);setError(null);try{await api('/scouting/preferences','PUT',{roles:String(data.get('roles')).split('\n').map(s=>s.trim()).filter(Boolean),locations:String(data.get('locations')).split('\n').map(s=>s.trim()).filter(Boolean),notes:String(data.get('notes'))});setEditing(false);await load();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  return <section className="panel scout-schedule"><h2>Career scouting & CV preparation</h2><ErrorMessage error={error}/>{!state&&!error&&<Spinner label="Loading scouting setup"/>}{state&&<>
-    <p>{state.schedule?.enabled?`Scheduled at ${state.schedule.times.join(', ')} · ${state.schedule.timeZone}.`:'No scouting schedule is connected yet.'}</p>
-    <p>Codex runs the searches; SteVie saves new career roles and queues a CV, cover letter, answers and interview brief for eligible matches. The laptop, Codex app and SteVie need to be running. Pending eligibility checks are held for review.</p>
-    {state.lastRun?<p role="status">Last search: {dateLabel(state.lastRun.lastRunAt,true)} · {state.lastRun.created} new roles · {state.lastRun.queued} packs queued · {state.lastRun.held} held · {state.lastRun.skipped} excluded or duplicate. Queued packs appear under each application's Documents when completed.</p>:<p>No completed scout run has been recorded yet.</p>}
+  return <><NativeScout/><section className="panel scout-schedule"><h2>Career preferences</h2><ErrorMessage error={error}/>{!state&&!error&&<Spinner label="Loading scouting setup"/>}{state&&<>
     {state.preferences&&<><h3>Your search preferences</h3><p><strong>Roles:</strong> {state.preferences.roles.join(' · ')}</p><p><strong>Locations:</strong> {state.preferences.locations.join(' · ')}</p><p>{state.preferences.notes}</p></>}
     <button className="button secondary" onClick={()=>setEditing(value=>!value)} aria-expanded={editing}>{editing?'Cancel editing':'Edit search preferences'}</button>
     {editing&&<form className="form-stack" onSubmit={save}><Field label="Role families (one per line)"><textarea name="roles" required rows={5} defaultValue={state.preferences?.roles.join('\n')}/></Field><Field label="Locations (one per line)"><textarea name="locations" required rows={3} defaultValue={state.preferences?.locations.join('\n')}/></Field><Field label="Priorities and exclusions"><textarea name="notes" rows={5} maxLength={5000} defaultValue={state.preferences?.notes}/></Field><button className="button primary" disabled={busy}>{busy?'Saving…':'Save preferences'}</button></form>}
-  </>}</section>;
+  </>}</section></>;
 }

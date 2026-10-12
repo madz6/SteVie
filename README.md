@@ -21,6 +21,10 @@ npm run build
 npm start
 ```
 
+## Automatic career scouting
+
+SteVie now runs its own background scout at configured Dublin times. The existing installation uses 09:00, 14:00 and 19:00; fresh installations start paused. **Scout** shows employer coverage, last-run diagnostics, schedule controls and saved preferences. The initial coverage is Monzo, BearingPoint Ireland and GoCardless, with Greenhouse/Lever boards supported. The selected AI assesses the shortlist and prepares matching application packs; rules handle feed retrieval, deduplication and scheduling. The chat can be closed, but the laptop must remain awake with SteVie running. See the [scouting runbook](docs/SCOUTING.md) for startup, limits and manual imports.
+
 ## AI connections
 
 SteVie can use the signed-in native clients directly:

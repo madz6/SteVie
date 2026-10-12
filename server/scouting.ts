@@ -10,6 +10,7 @@ const role=z.object({deadline,company:z.string().trim().min(1).max(200),title:z.
 const batch=z.object({checkedAt:z.string().datetime(),queries:z.array(z.string().max(500)).min(1).max(20),roles:z.array(role).max(7)}).strict();
 function canonical(value:string){try{const url=new URL(value);url.hash='';for(const key of [...url.searchParams.keys()])if(/^utm_|^(?:ref|source)$/i.test(key))url.searchParams.delete(key);return url.toString().replace(/\/$/,'');}catch{return '';}}
 const normal=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+export function isDuplicateRole(store:Store,candidate:{url:string;company:string;title:string;location:string}){return store.all<Job>('jobs').some(job=>job.url&&canonical(job.url)===canonical(candidate.url)||normal(job.company)===normal(candidate.company)&&normal(job.title)===normal(candidate.title)&&(normal(job.location)===normal(candidate.location)||!job.location));}
 export function importScouting(store:Store,body:unknown,enqueue:(job:Job)=>Task|undefined){
   const input=batch.parse(body);
   if(Date.parse(input.checkedAt)>Date.now()+300000||Date.now()-Date.parse(input.checkedAt)>86400000)throw new Error('Scout results must have been checked within the last day.');
@@ -18,7 +19,7 @@ export function importScouting(store:Store,body:unknown,enqueue:(job:Job)=>Task|
     for(const candidate of input.roles){
       if(candidate.eligibility==='ineligible'||suggestedTrack(candidate.title)==='income'){result.skipped++;continue;}
       const url=canonical(candidate.url);
-      const duplicate=store.all<Job>('jobs').some(job=>job.url&&canonical(job.url)===url||normal(job.company)===normal(candidate.company)&&normal(job.title)===normal(candidate.title)&&normal(job.location)===normal(candidate.location));
+      const duplicate=isDuplicateRole(store,candidate);
       if(duplicate){result.skipped++;continue;}
       const job:Job={id:id(),company:candidate.company,title:candidate.title,location:candidate.location,url,description:candidate.description,source:'Scheduled career scout',track:'career',employmentType:candidate.employmentType,status:'saved',deadline:candidate.deadline??null,notes:`Posting checked: ${input.checkedAt}. Eligibility: ${candidate.eligibility}. ${candidate.eligibilityNotes}`,needsReview:true,fit:null,fitReason:'Not assessed',createdAt:now(),updatedAt:now()};
       store.save('jobs',job);result.created++;result.jobIds.push(job.id);

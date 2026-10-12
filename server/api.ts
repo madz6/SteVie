@@ -1,3 +1,5 @@
+import {createNativeScoutRouter,queueScout,runNativeScout} from './nativeScout.js';
+import {assertCompletePack,quarantineIncompleteHistory} from './packValidation.js';
 import {canReviewCheck} from '../src/documentChecks.js';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
@@ -77,6 +79,7 @@ export function createApi(options:{store?:Store}={}) {
   router.use('/portability',createPortabilityRouter(store));
   router.use(express.json({limit:'25mb'}));
   router.use('/inbox',createInboxRouter(store));
+  router.use('/scouting/native',createNativeScoutRouter(store));
   router.use('/scouting',createScoutingRouter(store,job=>dailyRoom(store)?queueTask(store,'application',job.id,store.meta<Settings>('settings')!.provider):undefined));
   router.get('/health',(_req,res)=>res.json({ok:true}));
   router.get('/access',(_req,res)=>{
@@ -287,6 +290,7 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
       const knowledge=retrieveKnowledge(store,`${job.company} ${job.title} ${job.description}`);
       const result=await dependencies.generateApplication({job,evidence,profile:store.meta<Profile>('profile')!,context:`${generationContext()}\n\n${knowledge.context}`,provider});
       const references=new Set(evidence.map(e=>e.id));
+      assertCompletePack(result,references);
       const packFlags=[...result.flags];
       if(!result.evidenceIds.length||result.evidenceIds.some(reference=>!references.has(reference)))packFlags.push('Evidence references are missing or invalid. Check the source of every personal claim.');
       const documents:Document[]=[];
@@ -308,6 +312,10 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
         store.activity(`Prepared four documents for ${job.company}.${flagged?' Resolve the flagged checks before approval.':' Ready for your review.'}`);
       });
       await onComplete?.({kind:task.kind,jobId:job.id,text:`Application pack ready for ${job.company}.`});
+    } else if(task.kind==='scout') {
+      const run=await runNativeScout(store,task,job=>dailyRoom(store)?queueTask(store,'application',job.id,task.provider!):undefined);
+      store.save('tasks',{...task,status:'done',error:null,finishedAt:now()});
+      if(run.created||run.status==='partial')await onComplete?.({kind:'scout',jobId:null,text:`Career scout: ${run.created} new roles, ${run.queued} draft packs queued, ${run.held} held.${run.status==='partial'?' Some feeds need attention.':''}`});
     } else if(task.kind==='practice') {
       const practice=requireRecord(store.get<Practice>('practice',task.practiceId||''),'Practice');
       const job=practice.jobId?store.get<Job>('jobs',practice.jobId):undefined;
@@ -325,16 +333,17 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
       store.save('tasks',{...task,status:'failed',error:message,finishedAt:now()});
       if(task.kind==='application'&&task.jobId){const job=store.get<Job>('jobs',task.jobId);if(job)store.save('jobs',{...job,status:job.status==='preparing'?'saved':job.status,needsReview:true,updatedAt:now()});}
       if(task.kind==='practice'&&task.practiceId){const practice=store.get<Practice>('practice',task.practiceId);if(practice)store.save('practice',{...practice,status:'failed'});}
-      store.activity(`${task.kind==='application'?'Application preparation':'Practice review'} needs attention: ${message}`);
+      store.activity(`${task.kind==='application'?'Application preparation':task.kind==='scout'?'Career scouting':'Practice review'} needs attention: ${message}`);
     });
+    try{await onComplete?.({kind:'failure',jobId:task.jobId,text:`${task.kind==='scout'?'Career scouting':'Preparation'} needs attention: ${message}`});}catch{store.activity('Failure notification could not be delivered.');}
   }
   return true;
 }
 let activeStop:(()=>void)|undefined;
 export function startWorker(options:{store?:Store;onComplete?:(event:{kind:string;jobId:string|null;text:string})=>void|Promise<void>;intervalMs?:number}={}):()=>void {
   activeStop?.();
-  const store=options.store||getStore();store.recoverTasks();let busy=false;let stopped=false;
-  const tick=async()=>{if(busy||stopped)return;busy=true;try{await processOneTask(store,undefined,options.onComplete);}catch{console.error('Worker could not claim a task. It will retry.');}finally{busy=false;}};
+  const store=options.store||getStore();quarantineIncompleteHistory(store);store.recoverTasks();let busy=false;let stopped=false;
+  const tick=async()=>{if(busy||stopped)return;busy=true;try{try{queueScout(store);}catch{/* Invalid configuration/cap cannot stop the preparation queue. */}await processOneTask(store,undefined,options.onComplete);}catch{console.error('Worker could not claim a task. It will retry.');}finally{busy=false;}};
   const timer=setInterval(()=>void tick(),options.intervalMs||1500);timer.unref();void tick();
   const stop=()=>{stopped=true;clearInterval(timer);};activeStop=stop;return stop;
 }

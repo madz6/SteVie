@@ -1,6 +1,30 @@
-# Scheduled career scouting
+# SteVie background career scouting
 
-The recurring Codex chat searches at 09:00, 14:00 and 19:00 Europe/Dublin. It uses web access to research current postings. SteVie itself does not run an embedded web crawler. Keep the laptop awake, Codex open and SteVie running. A run can be delayed by offline state or provider allowance; inspect the last-run record instead of assuming execution.
+SteVie's server owns the recurring schedule and persistent work queue. The previous Codex chat heartbeat is paused. Codex does not need to be open. Keep the laptop awake and SteVie running; this is not always-on cloud hosting.
+
+## Everyday use
+
+Open **Scout → SteVie background scout**. Automatic scouting is enabled on the existing installation at **09:00, 14:00 and 19:00 Europe/Dublin**. A fresh installation starts paused. Use **Edit coverage & times** to change times, initial title/location filters and enabled employers. Saved career preferences below the panel are also supplied to the AI assessment. The broad filters are separate from those full preferences; keep both aligned when changing target markets.
+
+The initial enabled feeds are Monzo, BearingPoint Ireland and GoCardless. Greenhouse and Lever employer boards can be added by their careers-page links. These feeds are a limited discovery channel, not an internet-wide search. Jumpstart, Trackr, LinkedIn and live mailbox sync are not connected by this worker. It never submits applications or sends outreach.
+
+The server fetches published jobs directly from fixed vendor API origins. Rules remove obvious income/senior roles, apply location/title filters and skip existing applications. Up to seven new candidates are sent to the configured AI for assessment against saved preferences and usable career evidence. Uncertain matches are held; only eligible matches queue four-document packs within the existing daily preparation cap. Current configuration uses signed-in Claude Code, with no provider fallback.
+
+**Last run** reports source coverage, errors, counts and, for new assessments, reasons for inclusion/exclusion. Inspect **Applications → role → Documents** for completed drafts. Queued is not completed. Invalid or incomplete output fails the whole pack before saving; failed tasks remain visible for deliberate retry. Complete packs still require factual review.
+
+The worker catches up only the latest due slot after sleep, does not replay every missed search, and never overlaps scout tasks. It limits scouting to six queued runs per UTC day. Assessed unchanged postings are skipped for seven days; changes to evidence, preferences or initial filters invalidate that cache. Existing applications are not regenerated. Feed failures are recorded; some failed feeds produce a partial run rather than pretending coverage was complete. Feed publication is evidence of listing availability, not a guarantee that an employer still accepts applications. Recheck the actual posting before applying. Deadline/employment-type extraction from native feeds is not yet structured.
+
+## Windows background operation
+
+Build the UI with `npm run build`, then run `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-background.ps1`. The helper starts a hidden production process and writes logs inside ignored `.runtime/`. It avoids starting a second instance when SteVie already owns port 4317. The existing laptop has a **SteVie Background** Windows Startup shortcut to this helper; a fresh clone does not install that shortcut automatically.
+
+This starts at Windows sign-in, not before sign-in. There is no crash watchdog or sleep wake-up service. After an unexpected exit, run the helper again. Do not restart while a task is running. Back up private `data/` before moving machines. Workspace JSON exports include career preferences and saved content but exclude native schedule/configuration, run history, credentials and device registrations; reconfigure these on a new installation.
+
+Phone access uses the private HTTPS address and Tailscale. Add the site to the iPhone Home Screen and enable notifications in Connections. A configured subscription and successful device test are required to verify delivery; running the scout does not by itself connect a phone.
+
+## Optional researched imports
+
+The following helper remains available for deliberate research outside the configured feeds. It is not the recurring scheduler.
 
 ## Context and preferences
 

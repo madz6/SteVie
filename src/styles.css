@@ -666,3 +666,5 @@ input[type="checkbox"], input[type="radio"] { min-height: 24px; width: 24px; hei
 .review-check textarea { width: 100%; min-height: 80px; }
 .evidence-row > .button { flex: 0 0 auto; }
 @media(max-width:680px) { .evidence-row { flex-wrap:wrap; } .evidence-row > div { width:100%; } }
+
+.scout-feed-choice{display:flex;align-items:center;gap:12px;padding:10px 0}.scout-feed-choice input{width:20px;height:20px}.scout-schedule .export-actions{flex-wrap:wrap;gap:8px}.scout-schedule ul{padding-left:22px}

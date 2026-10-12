@@ -324,3 +324,42 @@ The timed chat wake-up ran against the live workspace. One new employer-verified
 ### Confidence and remaining improvements
 
 High confidence in the tested editing, review-state and archive flows. Medium confidence in content readiness: validation uses heuristics and cannot establish that every claim is true. Review text must be meaningful, even though software can enforce only its presence and length. Physical iPhone testing remains outstanding. Future work includes immutable candidate-evidence snapshots, structured links between extracted facts and their source documents, stronger contextual claim validation, and employer-specific page limits. Mailbox sync, connected platform imports and other previously documented integration gaps remain open.
+
+## Native scheduled scouting and complete-pack gates - 10–12 October 2026
+
+### Delivered and decisions
+
+- Moved recurring work into SteVie's server worker and persistent SQLite task queue. The previous Codex heartbeat is PAUSED. Schedule is enabled locally at 09:00, 14:00 and 19:00 Europe/Dublin; Codex can be closed. A fresh install defaults to paused.
+- Implemented fixed-origin Greenhouse and Lever feed adapters, request limits, title/location rules, career-only exclusions and duplicate suppression before model calls. Enabled live boards: Monzo, BearingPoint Ireland and GoCardless. Coverage is explicitly limited to configured employers.
+- Claude assesses at most seven shortlisted roles against saved preferences and usable evidence. Eligible new roles queue CV/letter/answers/brief tasks under the existing daily cap; uncertain roles are held. Captured provider choice is preserved; failures never switch providers.
+- Added mobile-accessible schedule/coverage editing, manual runs, source diagnostics and inclusion/exclusion reasons for newly assessed runs. Cached unchanged postings avoid repeated model spend for seven days. Existing applications do not trigger automatic pack regeneration.
+- Launched the production server independently with a hidden Windows helper and installed a sign-in Startup shortcut on this laptop. Local runtime and logs remain ignored. The helper is shipped; the machine-specific shortcut is not.
+- Reject incomplete/placeholder packs and missing/invalid evidence references before any document writes. Historical incomplete packs retain their text with blocking flags and lose misleading done labels. Reopening a successfully replaced task does not re-quarantine it solely because its old quarantined documents remain.
+- Constrained the provider's structured evidence list to actual supplied usable record IDs and explicitly required four complete documents. Inline citations remain independently audited; the schema cannot establish factual truth.
+- Structured Claude errors now pass through the same credential-free classifier as process failures, including usage-limit detection. No raw model output or candidate details are surfaced in these errors.
+- Notification links target the relevant role or Scout; failure and partial-run messages are distinct from completed drafts. Empty successful runs do not send push messages.
+
+Architecture alternatives, consequences and follow-ups are in [ADR-001](ADR-001-native-career-worker.md). Operational instructions are in [SCOUTING.md](SCOUTING.md).
+
+### Verification and observed outcomes
+
+- Final TypeScript validation passed; all **57 tests passed**. Production UI build passed. Regression coverage includes Dublin DST/latest-slot handling, overlap avoidance, source failures, provider isolation, repeated-result suppression, complete-pack rejection, historical quarantine, constrained evidence schema and safe structured error messages.
+- Native timed runs were observed at 19:00 Dublin on 10 October, all three slots on 11 October, and 09:00/14:00 on 12 October. The latest checked **112 postings** across all three feeds with no source errors and no new matching roles. The initial manual native run shortlisted four roles; Claude excluded all four. These are checked postings, not 112 suitable opportunities.
+- The production process was restarted only after confirming no queued/running work. Password-protected private access and the existing startup shortcut were checked. The old chat heartbeat was confirmed paused.
+- Isolated fictional UI checks at 390 x 844 exercised enabling the schedule, coverage/time editing, saving filters and queuing a manual run with the button disabled afterwards. The fixture had no worker and made no real submissions. Its temporary server/tab were closed and viewport reset after testing. Screenshot retained locally in ignored `.runtime/native-scout-phone.png`.
+- **AIB Finance pack remains failed, not delivered.** Its original letter/answers/brief contained placeholder-only text and were quarantined. A 10 October retry was rejected for invalid evidence references. A 12 October retry after tighter schema/prompt constraints failed at the Claude client; no new documents were saved. A subsequent small structured connection probe succeeded. This does not establish that full pack generation is reliable. The earlier generic error did not retain enough diagnostic detail to establish the cause; the new classifier improves future errors without retaining private output.
+- Notification status reports **zero device subscriptions**. No physical iPhone delivery has been demonstrated.
+
+### Confidence, limitations and next work
+
+| Area | Confidence | Remaining work |
+|---|---|---|
+| Native schedule and feed reads | High on this laptop while awake | Crash watchdog, wake-from-sleep/always-on hosting; scheduled work can wait behind long drafting tasks |
+| Discovery coverage | Low for the whole job market | More verified employers and supported adapters; current three-board coverage is narrow |
+| Matching | Medium | Align simple filters with full preferences; improve geographic matching, structured deadlines and application-open verification |
+| LLM generation reliability | Medium-low for the failed AIB case | Diagnose full structured-response failures; no claim that a small connection probe proves a complete pack can finish |
+| Pack integrity gates | High for tested structural failures | Semantic truth still needs review; length and citation checks are heuristics |
+| Phone layout | Medium-high for tested browser width | Physical Safari testing and push subscription/delivery |
+| Portability | Medium | Native schedule, feed configuration, run history and credentials are not restored by the current workspace archive |
+
+Still unfinished: live mailbox OAuth/sync, Jumpstart Quick Apply, Trackr API integration, automatic LinkedIn/people collection, broader discovery and always-on hosting. This release completes the native scheduling handover; it does not complete the entire A–Z job OS or the failed AIB replacement pack. No applications or outreach were sent.
