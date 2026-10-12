@@ -19,6 +19,7 @@ function initialDraft(session:Practice,key:string):Draft {
 }
 
 export function PracticeSession({session,provider,onSaved}:{session:Practice;provider:string;onSaved:(message:string)=>Promise<void>}) {
+  const [coach,setCoach]=useState(session.reviewProviders?.length===2||session.kind==='document_review'?'pair':session.reviewProviders?.[0]??'codex');
   const cacheKey=`stevie:practice-draft:${session.id}`;
   const [draft,setDraft]=useState(()=>initialDraft(session,cacheKey));
   const [saving,setSaving]=useState(false),[submitting,setSubmitting]=useState(false),[error,setError]=useState<string|null>(null),[saveLabel,setSaveLabel]=useState('Your draft saves automatically.');
@@ -75,13 +76,13 @@ export function PracticeSession({session,provider,onSaved}:{session:Practice;pro
     setSubmitting(true);setError(null);
     try{
       if(!await flush())return;
-      await api(`/practice/${session.id}/answer`,'POST',{answer,provider});
+      await api(`/practice/${session.id}/answer`,'POST',{answer,provider:coach==='pair'?'codex':coach,...(coach==='pair'?{reviewProvider:'claude-code'}:{})});
       await onSavedRef.current('Answer submitted for feedback');
     }catch(e){setError((e as Error).message);}finally{setSubmitting(false);}
   }
   const time=`${String(Math.floor(draft.timer.elapsedSeconds/60)).padStart(2,'0')}:${String(draft.timer.elapsedSeconds%60).padStart(2,'0')}`;
   return <section className="panel practice-session">
-    <div className="panel-heading"><div><span className="eyebrow">{session.synthetic===false?'SOURCE-BASED EXERCISE':'TRAINING EXERCISE'}</span><h2>{session.title}</h2><p className="practice-source-label">{session.sourceLabel||'Synthetic training exercise'}</p></div>
+    <div className="panel-heading"><div><span className="eyebrow">{session.kind==='document_review'?'DOCUMENT REVIEW':session.synthetic===false?'SOURCE-BASED EXERCISE':'TRAINING EXERCISE'}</span><h2>{session.title}</h2><p className="practice-source-label">{session.kind==='document_review'?'Saved document text; critique does not approve or rewrite it.':session.sourceLabel||'Synthetic training exercise'}</p></div>
       <div className="practice-timer"><span role="timer" aria-label={`Elapsed time ${time}`} aria-live="off">{time}</span><button className="icon-button" disabled={waiting} aria-label={draft.timer.mode==='timed'?'Pause timer':'Start timer'} onClick={()=>change({...draft,timer:{...draft.timer,mode:draft.timer.mode==='timed'?'untimed':'timed'}})}>{draft.timer.mode==='timed'?<Pause size={16}/>:<Play size={16}/>}</button><button className="icon-button" aria-label="Reset timer" onClick={()=>change({...draft,timer:{mode:'untimed',elapsedSeconds:0}})}><RotateCcw size={16}/></button></div>
     </div>
     <div className="practice-content">
@@ -92,7 +93,7 @@ export function PracticeSession({session,provider,onSaved}:{session:Practice;pro
       {structured&&draft.draftAnswer&&<details><summary>Previous answer — preserved</summary><RichText text={draft.draftAnswer}/><p>When you add stage notes, new feedback uses those notes. This earlier answer is kept here.</p></details>}
       <div className="practice-progress-actions"><span className="muted" role="status">{saveLabel}</span><button className="button secondary" disabled={saving} onClick={()=>void flush()}><Save size={16}/>Save now</button></div>
       <ErrorMessage error={error}/>{answerLength>16000&&<p role="alert">Your combined notes exceed 16,000 characters. Shorten the answer before requesting feedback; your notes remain saved.</p>}
-      <div className="answer-actions"><span className="muted">{answerLength?answer.trim().split(/\s+/).length:0} words · {answerLength.toLocaleString()} / 16,000 characters</span><button className="button primary" disabled={answerLength<20||answerLength>16000||submitting||waiting} onClick={()=>void submit()}>{submitting||waiting?<Spinner label={waiting?'Preparing feedback':'Submitting'}/>:<><Send size={16}/>{session.feedback?'Review revised answer':'Get feedback'}</>}</button></div>
+      <Field label="Who reviews this answer?" hint="The two-model option shares the answer and retrieved context with both providers, makes two calls and saves both opinions. It does not guarantee agreement."><select value={coach} disabled={waiting} onChange={e=>setCoach(e.target.value)}><option value="codex">Codex coach</option><option value="claude-code">Claude coach</option><option value="pair">Codex + Claude challenge</option></select></Field>{session.status==='failed'&&session.feedback&&<p role="alert">The review round did not finish. The first opinion is preserved below; check the task queue for the failure.</p>}<div className="answer-actions"><span className="muted">{answerLength?answer.trim().split(/\s+/).length:0} words · {answerLength.toLocaleString()} / 16,000 characters</span><button className="button primary" disabled={answerLength<20||answerLength>16000||submitting||waiting} onClick={()=>void submit()}>{submitting||waiting?<Spinner label={waiting?'Preparing feedback':'Submitting'}/>:<><Send size={16}/>{session.feedback?'Review revised answer':'Get feedback'}</>}</button></div>
       {session.feedback&&<div className="feedback-panel"><div className="feedback-heading"><h3>Feedback on your submitted answer</h3>{session.score!==null&&<span className="feedback-score">{session.score}<small>/100</small></span>}</div>{session.answer!==answer&&<p>You have changed your draft since this feedback. Submit it again for a new review.</p>}<RichText text={session.feedback}/></div>}
     </div>
   </section>;

@@ -5,7 +5,7 @@ import { api, safeUrl } from './api';
 import type { ScoutTarget, Settings } from './types';
 import { Empty, ErrorMessage, Field, Modal, Spinner } from './components';
 
-const sourceLabels:Record<ScoutTarget['source'],string>={linkedin:'LinkedIn',jumpstart:'Jumpstart',trackr:'Trackr',web:'Web search'};
+const sourceLabels:Record<ScoutTarget['source'],string>={linkedin:'LinkedIn',linkedin_posts:'LinkedIn posts',jumpstart:'Jumpstart',trackr:'Trackr',web:'Web search'};
 
 export function ScoutView({items,settings,onSaved}:{items:ScoutTarget[];settings:Settings;onSaved:(message:string)=>Promise<void>}) {
   const [adding,setAdding]=useState(false),[error,setError]=useState<string|null>(null),[busy,setBusy]=useState('');
@@ -15,6 +15,7 @@ export function ScoutView({items,settings,onSaved}:{items:ScoutTarget[];settings
 
 function scoutUrl(item:ScoutTarget,settings:Settings):string {
   const query=encodeURIComponent(item.query);
+  if(item.source==='linkedin_posts')return `https://www.linkedin.com/search/results/content/?keywords=${query}`;
   if(item.source==='linkedin')return `https://www.linkedin.com/${item.kind==='people'?'search/results/people/?keywords=':'jobs/search/?keywords='}${query}`;
   if(item.source==='jumpstart')return safeUrl(settings.jumpstartUrl)||'https://app.jumpstart-uk.com/candidate/roles';
   if(item.source==='trackr')return safeUrl(settings.trackrUrl)||'https://www.google.com/search?q='+encodeURIComponent(`site:trackr ${item.query}`);
@@ -24,5 +25,5 @@ function scoutUrl(item:ScoutTarget,settings:Settings):string {
 function ScoutForm({settings,onClose,onSaved}:{settings:Settings;onClose:()=>void;onSaved:()=>Promise<void>}){
   const [busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
   async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();const fields=Object.fromEntries(new FormData(event.currentTarget).entries());setBusy(true);setError(null);try{await api('/scouts','POST',{kind:fields.kind,source:fields.source,query:fields.query,notes:fields.notes});await onSaved();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  return <Modal title="Plan a scouting search" onClose={onClose}><form className="modal-form" onSubmit={submit}><div className="form-grid"><Field label="Search for"><select name="kind" defaultValue="roles"><option value="roles">Roles</option><option value="people">People</option></select></Field><Field label="Source"><select name="source" defaultValue="linkedin"><option value="linkedin">LinkedIn</option><option value="jumpstart">Jumpstart</option><option value="trackr">Trackr</option><option value="web">Web search</option></select></Field></div><Field label="Search query"><input name="query" required placeholder="e.g. Dublin product analyst AI SaaS"/></Field><Field label="Review note"><textarea name="notes" rows={4} placeholder="What would make a result worth saving? Which constraints matter?"/></Field><p className="form-intro"><Search size={15}/> The first version opens a source-specific search link. Save the roles or people you choose into Applications or People after checking them.</p><ErrorMessage error={error}/><div className="modal-actions"><button type="button" className="button secondary" onClick={onClose}>Cancel</button><button className="button primary" disabled={busy}>{busy?<Spinner label="Saving"/>:'Save search'}</button></div></form></Modal>;
+  return <Modal title="Plan a scouting search" onClose={onClose}><form className="modal-form" onSubmit={submit}><div className="form-grid"><Field label="Search for"><select name="kind" defaultValue="roles"><option value="roles">Roles</option><option value="people">People</option></select></Field><Field label="Source"><select name="source" defaultValue="linkedin"><option value="linkedin">LinkedIn jobs / people</option><option value="linkedin_posts">LinkedIn posts (hiring signals)</option><option value="jumpstart">Jumpstart</option><option value="trackr">Trackr</option><option value="web">Web search</option></select></Field></div><Field label="Search query"><input name="query" required placeholder="e.g. Dublin product analyst AI SaaS"/></Field><Field label="Review note"><textarea name="notes" rows={4} placeholder="What would make a result worth saving? Which constraints matter?"/></Field><p className="form-intro"><Search size={15}/> The first version opens a source-specific search link. Save the roles or people you choose into Applications or People after checking them.</p><ErrorMessage error={error}/><div className="modal-actions"><button type="button" className="button secondary" onClick={onClose}>Cancel</button><button className="button primary" disabled={busy}>{busy?<Spinner label="Saving"/>:'Save search'}</button></div></form></Modal>;
 }

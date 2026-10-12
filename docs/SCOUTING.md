@@ -4,7 +4,7 @@ SteVie's server owns the recurring schedule and persistent work queue. The previ
 
 ## Everyday use
 
-Open **Scout → SteVie background scout**. Automatic scouting is enabled on the existing installation at **09:00, 14:00 and 19:00 Europe/Dublin**. A fresh installation starts paused. Use **Edit coverage & times** to change times, initial title/location filters and enabled employers. Saved career preferences below the panel are also supplied to the AI assessment. The broad filters are separate from those full preferences; keep both aligned when changing target markets.
+Open **Scout → SteVie background scout**. Automatic scouting is enabled on the existing installation at **06:30, 12:30, 16:30 and 19:00 Europe/Dublin**. A fresh installation starts paused. Use **Edit coverage & times** to change times, initial title/location filters and enabled employers. Saved career preferences below the panel are also supplied to the AI assessment. The broad filters are separate from those full preferences; keep both aligned when changing target markets.
 
 The initial enabled feeds are Monzo, BearingPoint Ireland and GoCardless. Greenhouse and Lever employer boards can be added by their careers-page links. These feeds are a limited discovery channel, not an internet-wide search. Jumpstart, Trackr, LinkedIn and live mailbox sync are not connected by this worker. It never submits applications or sends outreach.
 

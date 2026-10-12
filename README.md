@@ -23,7 +23,7 @@ npm start
 
 ## Automatic career scouting
 
-SteVie now runs its own background scout at configured Dublin times. The existing installation uses 09:00, 14:00 and 19:00; fresh installations start paused. **Scout** shows employer coverage, last-run diagnostics, schedule controls and saved preferences. The initial coverage is Monzo, BearingPoint Ireland and GoCardless, with Greenhouse/Lever boards supported. The selected AI assesses the shortlist and prepares matching application packs; rules handle feed retrieval, deduplication and scheduling. The chat can be closed, but the laptop must remain awake with SteVie running. See the [scouting runbook](docs/SCOUTING.md) for startup, limits and manual imports.
+SteVie now runs its own background scout at configured Dublin times. The existing installation uses 06:30, 12:30, 16:30 and 19:00; fresh installations start paused. **Scout** shows employer coverage, last-run diagnostics, schedule controls and saved preferences. The initial coverage is Monzo, BearingPoint Ireland and GoCardless, with Greenhouse/Lever boards supported. The selected AI assesses the shortlist and prepares matching application packs; rules handle feed retrieval, deduplication and scheduling. The chat can be closed, but the laptop must remain awake with SteVie running. See the [scouting runbook](docs/SCOUTING.md) for startup, limits and manual imports.
 
 ## AI connections
 
@@ -66,3 +66,9 @@ On iPhone, open the HTTPS site in Safari, use **Share → Add to Home Screen**, 
 ## Application safety
 
 Imported roles are marked for review. A preparation task creates a CV, cover letter, answers and brief as drafts; it never submits an application. Generated factual claims require evidence markers and unresolved or unsupported claims are surfaced for review. Jumpstart is stored as a saved source link until its supported application flow has been verified in the signed-in session.
+
+## Your own installation and joint review
+
+Follow [Make it yours](docs/MAKE_IT_YOURS.md) for a clean personal copy with your own data and accounts. This remains a single-user workspace, not a public multi-tenant service. See the [source inventory](docs/SOURCE_COVERAGE.md) for the distinction between automatic feeds and search handoffs.
+
+Applications support saved phone-usability ratings and phone-first sorting. Practice lets you select Codex, Claude, or a bounded Codex + Claude challenge. Saved documents also offer joint critique; it does not rewrite, approve or send them.

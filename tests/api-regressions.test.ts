@@ -15,6 +15,22 @@ async function fixture() {
   return {store,request,close:()=>{server.closeAllConnections();server.close();store.close();}};
 }
 
+test('mobile ratings persist and document peer review queues both explicit providers',async()=>{
+ const f=await fixture();try{
+  const job=await f.request('/jobs',{company:'Fixture',title:'Analyst'}).then(r=>r.json()) as Job;
+  assert.equal((await f.request(`/jobs/${job.id}`,{mobileEase:'phone',mobileNote:'Tested CV upload'},'PATCH')).status,200);
+  assert.equal(f.store.get<Job>('jobs',job.id)?.mobileEase,'phone');
+  assert.equal((await f.request(`/jobs/${job.id}`,{mobileEase:'automatic_guess'},'PATCH')).status,400);
+  f.store.save<Document>('documents',{id:'doc',jobId:job.id,kind:'cv',title:'Fixture CV',content:'Fictional application document with no real candidate data.',createdAt:now(),provider:'claude-code',status:'draft',flags:[]});
+  const response=await f.request('/documents/doc/peer-review',{});assert.equal(response.status,202);
+  const result=await response.json();const task=f.store.get<Task>('tasks',result.task.id)!;
+  assert.equal(task.provider,'codex');assert.equal(task.reviewProvider,'claude-code');
+  const practice=f.store.get<Practice>('practice',result.practiceId)!;assert.equal(practice.kind,'document_review');assert.deepEqual(practice.reviewProviders,['codex','claude-code']);assert.match(practice.answer,/Fictional application/);
+  await processOneTask(f.store,{generateApplication:async()=>{throw new Error('No draft generation expected');},coachPractice:async value=>{if(value.provider==='claude-code')throw new Error('Fixture second-provider failure');return {feedback:'First opinion preserved',score:60};}});
+  assert.equal(f.store.get<Task>('tasks',task.id)?.status,'failed');assert.match(f.store.get<Practice>('practice',practice.id)!.feedback!,/First opinion preserved/);
+ }finally{f.close();}
+});
+
 test('reviewing imported details preserves stage and persists the chosen pipeline',async()=>{
   const f=await fixture();try{
     const created=await f.request('/jobs',{company:'Fixture',title:'Graduate Analyst',description:'Fictional role'});

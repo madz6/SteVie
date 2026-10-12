@@ -7,9 +7,9 @@ import {importScouting,isDuplicateRole} from './scouting.js';
 import {defaultFeeds,feedSchema,fetchFeed,shortlistMatch,type Posting} from './scoutFeeds.js';
 
 const terms=z.array(z.string().trim().min(2).max(100)).min(1).max(30);
-export const nativeConfigSchema=z.object({enabled:z.boolean(),times:z.array(z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)).min(1).max(3),timeZone:z.literal('Europe/Dublin'),feeds:z.array(feedSchema).min(1).max(15),locations:terms,roles:terms}).strict();
+export const nativeConfigSchema=z.object({enabled:z.boolean(),times:z.array(z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)).min(1).max(4),timeZone:z.literal('Europe/Dublin'),feeds:z.array(feedSchema).min(1).max(15),locations:terms,roles:terms}).strict();
 export type NativeConfig=z.infer<typeof nativeConfigSchema>;
-export const defaultConfig:NativeConfig={enabled:false,times:['09:00','14:00','19:00'],timeZone:'Europe/Dublin',feeds:defaultFeeds,locations:['Dublin','London','Ireland','United Kingdom','UK','Remote Europe'],roles:['analyst','consultant','graduate','product','operations','strategy','business']};
+export const defaultConfig:NativeConfig={enabled:false,times:['06:30','12:30','16:30','19:00'],timeZone:'Europe/Dublin',feeds:defaultFeeds,locations:['Dublin','London','Ireland','United Kingdom','UK','Remote Europe'],roles:['analyst','consultant','graduate','product','operations','strategy','business']};
 export const nativeConfig=(store:Store)=>nativeConfigSchema.parse(store.meta('nativeScoutConfig')??defaultConfig);
 export function dueSlot(config:NativeConfig,date:Date):string|undefined{
   if(!config.enabled)return;

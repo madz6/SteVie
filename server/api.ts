@@ -1,3 +1,4 @@
+import {peerReview} from './peerReview.js';
 import {createNativeScoutRouter,queueScout,runNativeScout} from './nativeScout.js';
 import {assertCompletePack,quarantineIncompleteHistory} from './packValidation.js';
 import {canReviewCheck} from '../src/documentChecks.js';
@@ -20,7 +21,7 @@ const url=text.max(2000).refine(value=>!value||/^https?:\/\/[^\s]+$/i.test(value
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value=>{const parsed=new Date(value+'T12:00:00Z');return Number.isFinite(parsed.valueOf())&&parsed.toISOString().slice(0,10)===value;},'Use a valid calendar date.').nullable();
 const providers=z.enum(['codex','claude-code','openai','anthropic']);
 const statuses=z.enum(['saved','preparing','ready','applied','interviewing','offer','rejected','archived','unknown']);
-const jobInput=z.object({track:z.enum(['career','income','unclassified']).optional(),employmentType:z.enum(['full_time','part_time','contract','internship','unknown']).optional(),company:short.min(1),title:short.min(1),location:short.optional(),url:url.optional(),source:short.optional(),description:text.max(45000).optional(),deadline:date.optional(),notes:text.max(12000).optional()});
+const jobInput=z.object({mobileEase:z.enum(['phone','laptop','unknown']).optional(),mobileNote:z.string().max(500).optional(),track:z.enum(['career','income','unclassified']).optional(),employmentType:z.enum(['full_time','part_time','contract','internship','unknown']).optional(),company:short.min(1),title:short.min(1),location:short.optional(),url:url.optional(),source:short.optional(),description:text.max(45000).optional(),deadline:date.optional(),notes:text.max(12000).optional()});
 const jobPatch=jobInput.omit({source:true}).partial().extend({status:statuses.optional(),needsReview:z.boolean().optional()});
 class HttpError extends Error {constructor(public status:number,message:string){super(message);}}
 function requireRecord<T>(item:T|undefined,label:string):T {if(!item)throw new HttpError(404,`${label} not found.`);return item;}
@@ -98,7 +99,7 @@ export function createApi(options:{store?:Store}={}) {
   });
   router.post('/jobs',(req,res)=>{
     const input=jobInput.parse(req.body);
-    const job:Job={id:id(),track:input.track,employmentType:input.employmentType,company:input.company,title:input.title,location:input.location||'',source:input.source||'Added by you',url:normalizedUrl(input.url||''),description:input.description||'',notes:input.notes||'',deadline:input.deadline||null,status:'saved',fit:null,fitReason:'Not assessed',needsReview:false,createdAt:now(),updatedAt:now()};
+    const job:Job={id:id(),mobileEase:input.mobileEase,mobileNote:input.mobileNote,track:input.track,employmentType:input.employmentType,company:input.company,title:input.title,location:input.location||'',source:input.source||'Added by you',url:normalizedUrl(input.url||''),description:input.description||'',notes:input.notes||'',deadline:input.deadline||null,status:'saved',fit:null,fitReason:'Not assessed',needsReview:false,createdAt:now(),updatedAt:now()};
     store.transaction(()=>{store.save('jobs',job);store.activity(`Saved ${job.title} at ${job.company}.`);});
     res.status(201).json(job);
   });
@@ -153,6 +154,15 @@ export function createApi(options:{store?:Store}={}) {
       if(job){const needsReview=documents.some(d=>d.flags.length>0||d.status!=='approved');store.save('jobs',{...job,needsReview,status:!needsReview&&['saved','unknown','preparing'].includes(job.status)?'ready':job.status,updatedAt:now()});}
     });res.json(updated);
   });
+  router.post('/documents/:id/peer-review',(req,res)=>{
+    const document=requireRecord(store.get<Document>('documents',String(req.params.id)),'Document');
+    if(document.content.length>16000)throw new HttpError(422,'This document is too long for a review round. Shorten a saved copy to 16,000 characters first.');
+    if(store.all<Task>('tasks').filter(t=>t.kind==='practice'&&t.createdAt.startsWith(dailyKey())).length>=store.meta<Settings>('settings')!.dailyLimit)throw new HttpError(429,'Daily review limit reached.');
+    const result=store.transaction(()=>{
+      const practice:Practice={id:id(),jobId:document.jobId,kind:'document_review',reviewProviders:['codex','claude-code'],title:`Review: ${document.title}`,prompt:'Review this saved application document against supplied candidate evidence and role requirements. Identify factual gaps, clarity issues and unsupported claims. Never invent missing achievements.',answer:document.content,feedback:null,score:null,status:'reviewing',createdAt:now()};
+      store.save('practice',practice);const task=queueTask(store,'practice',document.jobId,'codex',practice.id);task.reviewProvider='claude-code';store.save('tasks',task);return {practiceId:practice.id,task:publicTask(task)};
+    });res.status(202).json(result);
+  });
   router.get('/documents/:id/download',async(req,res)=>{
     const document=requireRecord(store.get<Document>('documents',String(req.params.id)),'Document');
     const format=z.enum(['pdf','md']).parse(req.query.format||'md');
@@ -178,10 +188,12 @@ export function createApi(options:{store?:Store}={}) {
     res.json(store.save('practice',{...practice,...input}));
   });
   router.post('/practice/:id/answer',(req,res)=>{
-    const input=z.object({answer:text.min(20).max(16000),provider:providers.optional()}).parse(req.body);
+    const input=z.object({answer:text.min(20).max(16000),provider:providers.optional(),reviewProvider:providers.optional()}).parse(req.body);
     const practice=requireRecord(store.get<Practice>('practice',String(req.params.id)),'Practice');
     if(store.all<Task>('tasks').some(t=>t.practiceId===practice.id&&['queued','running'].includes(t.status)))throw new HttpError(409,'Feedback is already queued for this exercise.');
-    const task=store.transaction(()=>{const task=queueTask(store,'practice',practice.jobId,input.provider||store.meta<Settings>('settings')!.provider,practice.id);store.save('practice',{...practice,answer:input.answer,status:'reviewing',feedback:null,score:null});return task;});
+    const selectedProvider=input.provider||store.meta<Settings>('settings')!.provider;
+    if(input.reviewProvider===selectedProvider)throw new HttpError(422,'Choose different providers for a second opinion.');
+    const task=store.transaction(()=>{const task=queueTask(store,'practice',practice.jobId,selectedProvider,practice.id);if(input.reviewProvider){task.reviewProvider=input.reviewProvider;store.save('tasks',task);}store.save('practice',{...practice,answer:input.answer,reviewProviders:[selectedProvider,...(input.reviewProvider?[input.reviewProvider]:[])],status:'reviewing',feedback:null,score:null});return task;});
     res.status(202).json(publicTask(task));
   });
   router.post('/contacts',(req,res)=>{
@@ -247,7 +259,7 @@ export function createApi(options:{store?:Store}={}) {
   });
   router.delete('/knowledge/:id',(req,res)=>{const item=requireRecord(store.get<KnowledgeItem>('knowledge',String(req.params.id)),'Knowledge item');if(store.all<Practice>('practice').some(session=>session.knowledgeId===item.id)||store.all<Document>('documents').some(document=>document.sourceSnapshots?.some(source=>source.id===item.id)))throw new HttpError(409,'This source supports saved work. Archive it instead to retain the evidence trail.');store.database.prepare('DELETE FROM records WHERE id=? AND type=?').run(item.id,'knowledge');res.status(204).end();});
   router.post('/scouts',(req,res)=>{
-    const input=z.object({kind:z.enum(['roles','people']),source:z.enum(['linkedin','jumpstart','trackr','web']),query:short.min(2),notes:text.max(12000).optional()}).parse(req.body);
+    const input=z.object({kind:z.enum(['roles','people']),source:z.enum(['linkedin','linkedin_posts','jumpstart','trackr','web']),query:short.min(2),notes:text.max(12000).optional()}).parse(req.body);
     const target:ScoutTarget={id:id(),kind:input.kind,source:input.source,query:input.query,notes:input.notes||'',status:'planned',createdAt:now(),updatedAt:now()};
     store.transaction(()=>{store.save('scouts',target);store.activity(`Added a ${target.kind} scouting plan for ${target.query}.`);});
     res.status(201).json(target);
@@ -320,7 +332,8 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
       const practice=requireRecord(store.get<Practice>('practice',task.practiceId||''),'Practice');
       const job=practice.jobId?store.get<Job>('jobs',practice.jobId):undefined;
       const knowledge=retrieveKnowledge(store,`${practice.kind} ${job?.title||''} ${practice.title}`,7000);
-      const result=await dependencies.coachPractice({kind:practice.kind,prompt:practice.prompt,answer:practice.answer,context:`${generationContext()}\n${job?`Target role: ${job.title} at ${job.company}.\nRole description: ${job.description.slice(0,9000)}`:''}\n${knowledge.context}`,provider});
+      const candidateEvidence=practice.kind==='document_review'?JSON.stringify(store.all<Evidence>('evidence').filter(e=>e.status!=='unresolved')):'';
+      const result=await peerReview({kind:practice.kind,prompt:practice.prompt,answer:practice.answer,context:`${generationContext()}\n${job?`Target role: ${job.title} at ${job.company}.\nRole description: ${job.description.slice(0,9000)}`:''}\n${knowledge.context}\nCandidate evidence: ${candidateEvidence}`,provider},task.reviewProvider,dependencies.coachPractice,(feedback,score)=>{store.save('practice',{...store.get<Practice>('practice',practice.id)!,feedback,score,status:'reviewing'});});
     store.transaction(()=>{store.save('practice',{...store.get<Practice>('practice',practice.id)!,feedback:result.feedback,score:Math.round(Math.max(0,Math.min(100,result.score))),status:'reviewed'});store.save('tasks',{...task,status:'done',error:null,finishedAt:now()});store.activity(`Feedback ready for ${practice.title}.`);});
       await onComplete?.({kind:task.kind,jobId:task.jobId,text:'Your practice feedback is ready.'});
     } else throw new Error('This task type has no connected source yet.');

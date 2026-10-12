@@ -12,7 +12,7 @@ function role(id = 'job-one'): Job {
   return { id, company: 'Example Employer', title: 'Analyst', location: 'Dublin', source: 'Fictional fixture', url: 'https://example.invalid/jobs/' + id, status: 'saved' as const, deadline: null, description: 'Fictional role description', notes: '', fit: null, fitReason: '', createdAt: stamp, updatedAt: stamp, needsReview: false };
 }
 function seed(store: Store) {
-  store.save('jobs', {...role(),track:'career',employmentType:'full_time'});
+  store.save('jobs', {...role(),track:'career',employmentType:'full_time',mobileEase:'phone',mobileNote:'Fictional CV upload only'});
   store.setMeta('scoutingPreferences',{roles:['Analyst'],locations:['Dublin'],notes:'Fixture'});
   store.setMeta('scoutingSchedule',{enabled:true,automationId:'must-never-export'});
   const material: KnowledgeItem = { id: 'knowledge-one', title: 'Fictional case', kind: 'case', url: '', content: 'A fictional repair shop has five bookings. Estimate its capacity.', source: 'Fictional source', tags: ['fixture'], status: 'reviewed', createdAt: stamp, updatedAt: stamp };

@@ -1,14 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createStore,id,now,type Job,type Task,type Settings} from '../server/db.js';
-import {defaultConfig,dueSlot,queueScout,runNativeScout} from '../server/nativeScout.js';
+import {defaultConfig,dueSlot,queueScout,runNativeScout,nativeConfigSchema} from '../server/nativeScout.js';
 import {feedUrl,parseFeed,shortlistMatch,type Posting,type Feed} from '../server/scoutFeeds.js';
 import {assertCompletePack,quarantineIncompleteHistory} from '../server/packValidation.js';
 const feed={company:'Fixture',kind:'greenhouse' as const,board:'fixture',enabled:true};
 const posting:Posting={key:'test',company:'Fixture',title:'Graduate Analyst',location:'Dublin',url:'https://example.com/jobs/test',description:'A fictional recent-graduate role analysing operational data and presenting findings to colleagues. No real vacancy.',employmentType:'unknown'};
+test('four daily commute slots are valid and the early run follows Dublin daylight saving',()=>{
+ const config=nativeConfigSchema.parse({...defaultConfig,enabled:true});
+ assert.deepEqual(config.times,['06:30','12:30','16:30','19:00']);
+ assert.equal(dueSlot(config,new Date('2026-10-13T05:30:00Z')),'2026-10-13T06:30');
+ assert.equal(dueSlot(config,new Date('2026-11-13T06:30:00Z')),'2026-11-13T06:30');
+ assert.throws(()=>nativeConfigSchema.parse({...config,times:[...config.times,'22:00']}));
+});
 function setup(){const store=createStore(':memory:',false);store.setMeta('scoutingPreferences',{roles:['Analyst'],locations:['Dublin'],notes:''});store.setMeta('settings',{...store.meta<Settings>('settings')!,provider:'claude-code'});store.setMeta('nativeScoutConfig',{...defaultConfig,enabled:true,feeds:[feed]});return store;}
 test('Dublin scheduler follows DST, catches up only latest slot and persists its claim',()=>{
-  const config={...defaultConfig,enabled:true};
+  const config={...defaultConfig,enabled:true,times:['09:00','14:00','19:00']};
   assert.equal(dueSlot(config,new Date('2026-10-10T08:00:00Z')),'2026-10-10T09:00');
   assert.equal(dueSlot(config,new Date('2026-11-10T08:59:00Z')),undefined);
   assert.equal(dueSlot(config,new Date('2026-11-10T19:05:00Z')),'2026-11-10T19:00');
