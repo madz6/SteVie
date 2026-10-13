@@ -668,3 +668,19 @@ input[type="checkbox"], input[type="radio"] { min-height: 24px; width: 24px; hei
 @media(max-width:680px) { .evidence-row { flex-wrap:wrap; } .evidence-row > div { width:100%; } }
 
 .scout-feed-choice{display:flex;align-items:center;gap:12px;padding:10px 0}.scout-feed-choice input{width:20px;height:20px}.scout-schedule .export-actions{flex-wrap:wrap;gap:8px}.scout-schedule ul{padding-left:22px}
+/* People: readable source trails and draft controls on a phone. */
+.people-signal{margin:16px 0;padding:14px;background:var(--bg,#f6f5f0);border-left:3px solid #9cb7ab;border-radius:4px;overflow-wrap:anywhere}
+.people-signal p{margin:8px 0;white-space:pre-wrap}
+.people-signal span,.people-signal strong{font-size:13px}
+.people-roles{display:grid;gap:8px;margin:16px 0}
+.people-roles button{text-align:left;white-space:normal}
+.people-fieldset{min-width:0;border:1px solid #d9dfd9;border-radius:12px;padding:16px;margin:8px 0}
+.people-fieldset legend{padding:0 8px;font-weight:600}
+.people-signal-form{display:grid;gap:14px;border-bottom:1px solid #d9dfd9;margin-bottom:18px;padding-bottom:18px}
+.people-linked-row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.people-draft{display:grid;gap:14px;border-top:1px solid #d9dfd9;padding-top:24px;margin-top:12px;min-width:0}
+.people-draft textarea{line-height:1.65;min-width:0;resize:vertical}
+.people-draft details{overflow-wrap:anywhere;font-size:13px}
+.people-draft-actions{display:flex;gap:10px;flex-wrap:wrap}
+.view-people .person-links{overflow-wrap:anywhere;flex-wrap:wrap}
+@media(max-width:600px){.people-draft-actions .button{flex:1 1 140px;min-height:44px}.people-fieldset{padding:12px}.view-people .person-card{min-width:0}}

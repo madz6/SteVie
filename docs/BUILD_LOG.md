@@ -1,5 +1,32 @@
 # SteVie rebuild: build log and review packet
 
+## Current checkpoint — 13 October 2026: People and outreach
+
+This section supersedes earlier status snapshots. SteVie remains a single-owner local application with a limited set of connected discovery sources.
+
+### Shipped behaviour
+
+- People now retains multiple source-backed hiring signals (URL, observed date, summary, unconfirmed/user-confirmed/closed), links to multiple saved roles, editable contact details and constrained conversation statuses. Roles open their real application detail; due follow-ups can be filtered on a phone.
+- New durable outreach tasks use the explicitly selected provider and bounded structured output. Context includes profile, usable career evidence, contact notes, signal summaries and linked-role text. Contact email/profile/source URLs are not needed by the drafting prompt. This is drafting only: no message transport, guessed email enrichment or application submission.
+- Drafts expose checks and human-readable evidence, support editing, marking reviewed, copy and plain-text download. Contact/source edits, evidence edits and relevant linked-role edits invalidate affected drafts. A context change during generation fails the task without saving an outdated draft.
+- Concurrent duplicate requests are rejected, failed calls count against a separate daily outreach budget, retries preserve provider selection and up to 20 drafts are retained per contact. The configured daily limit supplies the numeric cap. Draft removal is an explicit user action.
+- Mission Control includes outstanding outreach reviews and correctly routes running outreach tasks to People. Completion notifications target People; delivery still requires a registered device subscription.
+- JSON archives preserve signals, many-to-many role links, draft review state and task ownership. Import checks related record IDs and never starts restored work automatically.
+
+### Evidence and confidence
+
+- 68 automated tests pass, including source/date validation, provider capture, duplicate prevention, failed-call caps, context change rejection, invalid evidence IDs, source URL changes and archive relationship validation. TypeScript and production build pass.
+- A live Claude Code draft succeeded using only fictional candidate/contact data. It asked about a possible opening without claiming a vacancy or shared relationship. The observed-date language was too confident, so the prompt now explicitly separates observation date from publication date and preserves simulated/training qualifiers. This last prompt tightening is not a guarantee of factual correctness; all drafts require human review.
+- Browser at 390×844: edited and saved a fictional outreach subject, marked it reviewed, edited the contact status and opened its linked role. This is responsive browser evidence, not a physical iPhone test.
+- Read-only production check: all four scheduled scouts ran on 13 October at 06:30, 12:30, 16:30 and 19:00 Dublin. Latest run read 114 postings across Monzo, BearingPoint Ireland and GoCardless, with zero newly shortlisted roles. No tasks were active before deployment.
+- Confidence: high for tested persistence/queue/review paths; medium for model draft quality; automatic people discovery and mailbox reply sync are not implemented. No real networking messages were generated or sent in validation.
+
+### Architecture decisions and remaining work
+
+Contacts own their signal history and draft history as bounded optional fields, maintaining compatibility with existing records. Role IDs provide many-to-many links without a second duplicated jobs store. A distinct outreach task kind uses the existing persistent worker and failure reporting. Existing application/practice work is unchanged.
+
+Next: standalone company signals and authorised bulk ingestion; broaden verified employer feeds; compare/revise outreach with a second model; live mailbox sync; source publication dates and immutable context snapshots; stronger semantic evidence checks; a configurable dedicated outreach budget and discard/restore UX; tenant isolation and durable hosted workers before a shared Vercel service. A signal's current status is still manually maintained, and merely saving a link never means a platform account is connected. The previous AIB application-pack failure is not fixed by this release.
+
 ## Current checkpoint â€” 8 October 2026
 
 This checkpoint supersedes status and validation claims in the historical sections below. This remains a working rebuild, not a completed autonomous Job OS.

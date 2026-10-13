@@ -1,3 +1,4 @@
+import {networkingFields,outreachDraftSchema} from './networking.js';
 import { scoutingPreferences } from './scouting.js';
 import { createHash, randomBytes } from 'node:crypto';
 import express, { type NextFunction, type Request, type Response } from 'express';
@@ -25,10 +26,10 @@ const practiceSource = z.object({ ...sourceFields, content: text, truncated: z.b
 // directly. Unknown fields must not bypass the supported archive schema.
 const schemas: Record<string, z.ZodType> = {
   jobs: z.object({ mobileEase:z.enum(['phone','laptop','unknown']).optional(),mobileNote:z.string().max(500).optional(),track:z.enum(['career','income','unclassified']).optional(), employmentType:z.enum(['full_time','part_time','contract','internship','unknown']).optional(), id: identifier, company: text, title: text, location: text, source: text, url: text, status: z.enum(['saved','preparing','ready','applied','interviewing','offer','rejected','archived','unknown']), deadline: nullableText, description: text, notes: text, fit: z.number().finite().nullable(), fitReason: text, createdAt: timestamp, updatedAt: timestamp, needsReview: z.boolean() }).strict(),
-  tasks: z.object({ id: identifier, kind: z.enum(['application','practice','scout']), jobId: nullableId, status: z.enum(['queued','running','done','failed']), error: nullableText, createdAt: timestamp, finishedAt: timestamp.nullable(), provider: providers.optional(), reviewProvider:providers.optional(), practiceId: identifier.optional(), attempts: z.number().int().min(0).optional(), restoredStatus: z.enum(['queued','running']).optional() }).strict(),
+  tasks: z.object({ id: identifier, contactId:identifier.optional(), kind: z.enum(['application','practice','scout','outreach']), jobId: nullableId, status: z.enum(['queued','running','done','failed']), error: nullableText, createdAt: timestamp, finishedAt: timestamp.nullable(), provider: providers.optional(), reviewProvider:providers.optional(), practiceId: identifier.optional(), attempts: z.number().int().min(0).optional(), restoredStatus: z.enum(['queued','running']).optional() }).strict(),
   documents: z.object({ reviewChecks:z.array(z.object({flag:text,note:text,reviewedAt:timestamp}).strict()).max(100).optional(), id: identifier, jobId: identifier, kind: z.enum(['cv','letter','answers','brief']), title: text, content: text, status: z.enum(['draft','needs_review','approved']), createdAt: timestamp, provider: text, flags: strings, evidenceIds: z.array(identifier).max(500).optional(), generationFlags: strings.optional(), sourceSnapshots: z.array(documentSource).max(500).optional() }).strict(),
   practice: z.object({ reviewProviders:z.array(providers).min(1).max(2).optional(), id: identifier, jobId: nullableId, kind: text, title: text, prompt: text, answer: text, feedback: nullableText, score: z.number().finite().nullable(), status: text, createdAt: timestamp, knowledgeId: nullableId.optional(), draftAnswer: z.string().max(16000).optional(), stage: stage.optional(), stageAnswers: z.partialRecord(stage, text).optional(), timer: z.object({ mode: z.enum(['untimed','timed']), elapsedSeconds: z.number().int().min(0).max(604800) }).strict().optional(), sourceSnapshot: practiceSource.optional(), sourceLabel: text.optional(), synthetic: z.boolean().optional() }).strict(),
-  contacts: z.object({ id: identifier, name: text, company: text, role: text, email: text, profileUrl: text, notes: text, followUp: nullableText, status: text }).strict(),
+  contacts: z.object({ ...networkingFields,outreachDrafts:z.array(outreachDraftSchema).max(20).optional(), id: identifier, name: text, company: text, role: text, email: text, profileUrl: text, notes: text, followUp: nullableText, status: text }).strict(),
   learning: z.object({ id: identifier, title: text, skill: text, status: z.enum(['planned','active','done']), nextAction: text, createdAt: timestamp }).strict(),
   evidence: z.object({ id: identifier, category: text, text, source: text, status: z.enum(['verified','user_stated','unresolved']) }).strict(),
   activity: z.object({ id: identifier, text, createdAt: timestamp }).strict(),
@@ -117,7 +118,11 @@ function links(record: RecordItem): { id: string; type: string }[] {
   const result: { id: string; type: string }[] = [];
   const link = (field: string, type: string) => { const value = record.data[field]; if (typeof value === 'string' && value) result.push({ id: value, type }); };
   if (['tasks','documents','practice','inbox_messages','inbox_events'].includes(record.type)) link('jobId', 'jobs');
-  if (record.type === 'tasks') link('practiceId', 'practice');
+  if (record.type === 'tasks') {link('practiceId', 'practice');link('contactId','contacts');}
+  if(record.type==='contacts'){
+    for(const id of (record.data.jobIds||[]) as string[])result.push({id,type:'jobs'});
+    for(const draft of (record.data.outreachDrafts||[]) as {evidenceIds:string[]}[])for(const id of draft.evidenceIds)result.push({id,type:'evidence'});
+  }
   if (record.type === 'practice') link('knowledgeId', 'knowledge');
   if (record.type === 'inbox_events') link('messageId', 'inbox_messages');
   if (record.type === 'documents' && Array.isArray(record.data.evidenceIds)) for (const value of record.data.evidenceIds) result.push({ id: String(value), type: 'evidence' });

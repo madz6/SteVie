@@ -5,7 +5,8 @@ import type { Bootstrap } from './types';
 import { ErrorMessage, Spinner } from './components';
 import { Applications, JobForm } from './Applications';
 import { PracticeView } from './Practice';
-import { PeopleView, LearningView, ProfileView } from './Workspace';
+import { PeopleView } from './People';
+import { LearningView, ProfileView } from './Workspace';
 import { Connections } from './Connections';
 import { KnowledgeView } from './Knowledge';
 import { ScoutView } from './Scout';
@@ -59,7 +60,7 @@ export default function App() {
         {view==='inbox' && <Recovery jobs={data.jobs} onSaved={onSaved} openJob={openJob}/>}
         {view==='data' && <DataTransfer onSaved={onSaved}/>}
         {view==='practice' && <PracticeView data={data} onSaved={onSaved}/>}
-        {view==='people' && <PeopleView contacts={data.contacts} onSaved={onSaved}/>}
+        {view==='people' && <PeopleView data={data} openJob={openJob} onSaved={onSaved}/>}
         {view==='learning' && <LearningView items={data.learning} onSaved={onSaved}/>}
         {view==='scout' && <ScoutView items={data.scouts} settings={data.settings} onSaved={onSaved}/>}
         {view==='knowledge' && <KnowledgeView items={data.knowledge} onSaved={onSaved}/>}

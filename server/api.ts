@@ -1,3 +1,4 @@
+import {networkingFields,outreachOutput,outreachContext,outreachFingerprint} from './networking.js';
 import {peerReview} from './peerReview.js';
 import {createNativeScoutRouter,queueScout,runNativeScout} from './nativeScout.js';
 import {assertCompletePack,quarantineIncompleteHistory} from './packValidation.js';
@@ -7,7 +8,7 @@ import { z } from 'zod';
 import { getStore, id, now, type Store, type Job, type Task, type Document, type Practice, type Contact, type Learning, type Evidence, type Settings, type Profile, type Integration, type KnowledgeItem, type ScoutTarget } from './db.js';
 import { generationContext } from './import.js';
 import { factualFlags, renderPdf, safeFilename } from './documents.js';
-import { providerStatuses, testProvider, generateApplication, coachPractice } from './ai.js';
+import { providerStatuses, testProvider, generateApplication, coachPractice, generateOutreach } from './ai.js';
 import { createInboxRouter, type InboxCoverage } from './inbox.js';
 import { createPortabilityRouter } from './portability.js';
 import { parseKnowledgeUpload, retrieveKnowledge } from './knowledge.js';
@@ -33,6 +34,7 @@ function normalizedUrl(value:string):string {
 }
 const dailyKey=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 function dailyRoom(store:Store,kind:Task['kind']='application'):boolean {
+  if(kind==='outreach'){const usage=store.meta<{date:string;count:number}>('outreachUsage');const used=usage?.date===dailyKey()?usage.count:0;return used+store.all<Task>('tasks').filter(t=>t.kind==='outreach'&&t.status==='queued').length<(store.meta<Settings>('settings')?.dailyLimit||20);}
   if(kind!=='application')return true;
   const usage=store.meta<{date:string;count:number}>('dailyUsage');
   const used=usage?.date===dailyKey()?usage.count:0;
@@ -41,6 +43,7 @@ function dailyRoom(store:Store,kind:Task['kind']='application'):boolean {
 }
 function publicTask(task:Task):Task {const {provider,practiceId,attempts,...publicFields}=task;return publicFields;}
 function invalidateSourceDocuments(store:Store,sourceId:string,kind:'knowledge'|'evidence'){
+  if(kind==='evidence')for(const contact of store.all<Contact>('contacts'))if(contact.outreachDrafts?.some(d=>d.evidenceIds.includes(sourceId)))store.save('contacts',{...contact,outreachDrafts:contact.outreachDrafts.map(d=>d.evidenceIds.includes(sourceId)?{...d,stale:true}:d)});
   for(const document of store.all<Document>('documents')){
     const linked=kind==='knowledge'?document.sourceSnapshots?.some(source=>source.id===sourceId):document.evidenceIds?.includes(sourceId);
     if(!linked)continue;
@@ -109,7 +112,7 @@ export function createApi(options:{store?:Store}={}) {
     if(patch.status==='preparing')throw new HttpError(422,'Use Prepare pack to start preparation.');
     if(patch.status==='ready'&&store.all<Document>('documents').filter(d=>d.jobId===job.id).length===0)throw new HttpError(422,'Prepare and review documents before marking the opportunity ready.');
     const updated={...job,...patch,url:patch.url!==undefined?normalizedUrl(patch.url):job.url,updatedAt:now(),needsReview:patch.needsReview??(patch.status?false:job.needsReview)};
-    store.transaction(()=>{store.save('jobs',updated);if(patch.status&&patch.status!==job.status)store.activity(`${job.company}: ${patch.status}.`);});
+    store.transaction(()=>{store.save('jobs',updated);if(['description','company','title','status'].some(key=>JSON.stringify(job[key as keyof Job])!==JSON.stringify(updated[key as keyof Job])))for(const contact of store.all<Contact>('contacts'))if(contact.jobIds?.includes(job.id)&&contact.outreachDrafts?.length)store.save('contacts',{...contact,outreachDrafts:contact.outreachDrafts.map(d=>({...d,stale:true}))});if(patch.status&&patch.status!==job.status)store.activity(`${job.company}: ${patch.status}.`);});
     res.json(updated);
   });
   router.post('/jobs/:id/prepare',(req,res)=>{
@@ -196,15 +199,42 @@ export function createApi(options:{store?:Store}={}) {
     const task=store.transaction(()=>{const task=queueTask(store,'practice',practice.jobId,selectedProvider,practice.id);if(input.reviewProvider){task.reviewProvider=input.reviewProvider;store.save('tasks',task);}store.save('practice',{...practice,answer:input.answer,reviewProviders:[selectedProvider,...(input.reviewProvider?[input.reviewProvider]:[])],status:'reviewing',feedback:null,score:null});return task;});
     res.status(202).json(publicTask(task));
   });
+  const contactInput=z.object({name:short.min(1),company:short.optional(),role:short.optional(),email:z.union([z.email(),z.literal('')]).optional(),profileUrl:url.optional(),notes:text.max(12000).optional(),followUp:date.optional(),status:z.enum(['new','contacted','replied','meeting','closed']).optional(),...networkingFields});
+  function checkContactLinks(input:{jobIds?:string[]}){for(const jobId of input.jobIds||[])requireRecord(store.get<Job>('jobs',jobId),'Linked opportunity');}
   router.post('/contacts',(req,res)=>{
-    const input=z.object({name:short.min(1),company:short.optional(),role:short.optional(),email:z.union([z.email(),z.literal('')]).optional(),profileUrl:url.optional(),notes:text.max(12000).optional(),followUp:date.optional()}).parse(req.body);
-    const contact:Contact={id:id(),name:input.name,company:input.company||'',role:input.role||'',email:input.email||'',profileUrl:input.profileUrl||'',notes:input.notes||'',followUp:input.followUp||null,status:'new'};
+    const input=contactInput.parse(req.body);checkContactLinks(input);
+    const contact:Contact={id:id(),company:'',role:'',email:'',profileUrl:'',notes:'',followUp:null,status:'new',...input};
     store.save('contacts',contact);res.status(201).json(contact);
   });
   router.patch('/contacts/:id',(req,res)=>{
     const contact=requireRecord(store.get<Contact>('contacts',String(req.params.id)),'Contact');
-    const input=z.object({notes:text.max(12000).optional(),followUp:date.optional(),status:z.enum(['new','contacted','replied','meeting','closed']).optional()}).parse(req.body);
-    res.json(store.save('contacts',{...contact,...input}));
+    const input=contactInput.partial().parse(req.body);checkContactLinks(input);
+    const updated={...contact,...input};
+    if(outreachFingerprint(store,contact)!==outreachFingerprint(store,updated))updated.outreachDrafts=contact.outreachDrafts?.map(d=>({...d,stale:true}));
+    res.json(store.save('contacts',updated));
+  });
+  router.post('/contacts/:id/outreach',(req,res)=>{
+    const contact=requireRecord(store.get<Contact>('contacts',String(req.params.id)),'Contact');
+    const input=z.object({provider:providers.optional()}).parse(req.body||{});
+    if(!contact.signals?.some(s=>s.status!=='closed'))throw new HttpError(422,'Save an open hiring signal with a source, date and summary first.');
+    if(!outreachContext(store,contact).evidence.length)throw new HttpError(422,'Add usable career evidence before drafting an approach.');
+    if((contact.outreachDrafts?.length||0)>=20)throw new HttpError(422,'This contact has 20 saved drafts. Export and remove an older draft first.');
+    if(store.all<Task>('tasks').some(t=>t.kind==='outreach'&&t.contactId===contact.id&&['queued','running'].includes(t.status)))throw new HttpError(409,'An approach is already being drafted for this person.');
+    if(!dailyRoom(store,'outreach'))throw new HttpError(429,'Daily outreach drafting limit reached.');
+    const task:Task={id:id(),kind:'outreach',contactId:contact.id,jobId:null,provider:input.provider||store.meta<Settings>('settings')!.provider,status:'queued',error:null,createdAt:now(),finishedAt:null,attempts:0};
+    store.save('tasks',task);res.status(202).json(publicTask(task));
+  });
+  router.patch('/contacts/:id/outreach/:draftId',(req,res)=>{
+    const contact=requireRecord(store.get<Contact>('contacts',String(req.params.id)),'Contact');
+    requireRecord(contact.outreachDrafts?.find(d=>d.id===req.params.draftId),'Draft');
+    const input=z.object({subject:outreachOutput.shape.subject,body:outreachOutput.shape.body,reviewed:z.boolean().optional()}).parse(req.body);
+    if(input.reviewed&&contact.outreachDrafts!.find(d=>d.id===req.params.draftId)?.stale)throw new HttpError(422,'The source context changed. Prepare a fresh draft before marking it reviewed.');
+    res.json(store.save('contacts',{...contact,outreachDrafts:contact.outreachDrafts!.map(d=>d.id===req.params.draftId?{...d,subject:input.subject,body:input.body,editedAt:now(),reviewedAt:input.reviewed?now():undefined}:d)}));
+  });
+  router.delete('/contacts/:id/outreach/:draftId',(req,res)=>{
+    const contact=requireRecord(store.get<Contact>('contacts',String(req.params.id)),'Contact');
+    requireRecord(contact.outreachDrafts?.find(d=>d.id===req.params.draftId),'Draft');
+    res.json(store.save('contacts',{...contact,outreachDrafts:contact.outreachDrafts!.filter(d=>d.id!==req.params.draftId)}));
   });
   router.post('/learning',(req,res)=>{
     const input=z.object({title:short.min(1),skill:short.optional(),nextAction:text.max(3000).optional()}).parse(req.body);
@@ -286,8 +316,8 @@ export function createApi(options:{store?:Store}={}) {
   return router;
 }
 
-type WorkerDependencies={generateApplication:typeof generateApplication;coachPractice:typeof coachPractice};
-export async function processOneTask(store:Store,dependencies:WorkerDependencies={generateApplication,coachPractice},onComplete?:(event:{kind:string;jobId:string|null;text:string})=>void|Promise<void>):Promise<boolean> {
+type WorkerDependencies={generateApplication:typeof generateApplication;coachPractice:typeof coachPractice;generateOutreach?:typeof generateOutreach};
+export async function processOneTask(store:Store,dependencies:WorkerDependencies={generateApplication,coachPractice,generateOutreach},onComplete?:(event:{kind:string;jobId:string|null;text:string})=>void|Promise<void>):Promise<boolean> {
   const task=store.claimTask();if(!task)return false;
   try {
     const day=dailyKey();const old=store.meta<{date:string;count:number}>('dailyUsage');const used=old?.date===day?old.count:0;
@@ -328,6 +358,22 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
       const run=await runNativeScout(store,task,job=>dailyRoom(store)?queueTask(store,'application',job.id,task.provider!):undefined);
       store.save('tasks',{...task,status:'done',error:null,finishedAt:now()});
       if(run.created||run.status==='partial')await onComplete?.({kind:'scout',jobId:null,text:`Career scout: ${run.created} new roles, ${run.queued} draft packs queued, ${run.held} held.${run.status==='partial'?' Some feeds need attention.':''}`});
+    } else if(task.kind==='outreach') {
+      const contact=requireRecord(store.get<Contact>('contacts',task.contactId||''),'Contact');
+      if(!contact.signals?.some(s=>s.status!=='closed'))throw new Error('No open hiring signal remains. Check this contact before retrying.');
+      if((contact.outreachDrafts?.length||0)>=20)throw new Error('This contact already has 20 drafts. Remove an older draft before retrying.');
+      const usage=store.meta<{date:string;count:number}>('outreachUsage');const count=usage?.date===day?usage.count:0;
+      if(count>=store.meta<Settings>('settings')!.dailyLimit)throw new Error('Daily outreach drafting limit reached. Retry tomorrow.');
+      store.setMeta('outreachUsage',{date:day,count:count+1});
+      if(!dependencies.generateOutreach)throw new Error('Outreach drafting is not configured.');
+      const context=outreachContext(store,contact),fingerprint=outreachFingerprint(store,contact);
+      const result=outreachOutput.parse(await dependencies.generateOutreach({provider,context}));
+      if(result.evidenceIds.some(id=>!context.evidence.some(e=>e.id===id)))throw new Error('Outreach references unknown evidence. No draft was saved.');
+      const current=requireRecord(store.get<Contact>('contacts',contact.id),'Contact');
+      if(outreachFingerprint(store,current)!==fingerprint)throw new Error('Supporting context changed during drafting. Retry to use the current sources.');
+      const draft={...result,id:id(),provider,createdAt:now(),flags:[...new Set(['Check the source is still current and each claim is accurate before sending.',...result.flags])]};
+      store.transaction(()=>{store.save('contacts',{...current,outreachDrafts:[draft,...(current.outreachDrafts||[])]});store.save('tasks',{...task,status:'done',finishedAt:now(),error:null});store.activity(`Outreach draft ready for ${current.name}. Nothing has been sent.`);});
+      await onComplete?.({kind:'outreach',jobId:null,text:'An outreach draft is ready in People. Review before sending.'});
     } else if(task.kind==='practice') {
       const practice=requireRecord(store.get<Practice>('practice',task.practiceId||''),'Practice');
       const job=practice.jobId?store.get<Job>('jobs',practice.jobId):undefined;
@@ -346,7 +392,7 @@ export async function processOneTask(store:Store,dependencies:WorkerDependencies
       store.save('tasks',{...task,status:'failed',error:message,finishedAt:now()});
       if(task.kind==='application'&&task.jobId){const job=store.get<Job>('jobs',task.jobId);if(job)store.save('jobs',{...job,status:job.status==='preparing'?'saved':job.status,needsReview:true,updatedAt:now()});}
       if(task.kind==='practice'&&task.practiceId){const practice=store.get<Practice>('practice',task.practiceId);if(practice)store.save('practice',{...practice,status:'failed'});}
-      store.activity(`${task.kind==='application'?'Application preparation':task.kind==='scout'?'Career scouting':'Practice review'} needs attention: ${message}`);
+      store.activity(`${task.kind==='application'?'Application preparation':task.kind==='scout'?'Career scouting':task.kind==='outreach'?'Outreach drafting':'Practice review'} needs attention: ${message}`);
     });
     try{await onComplete?.({kind:'failure',jobId:task.jobId,text:`${task.kind==='scout'?'Career scouting':'Preparation'} needs attention: ${message}`});}catch{store.activity('Failure notification could not be delivered.');}
   }

@@ -1,3 +1,4 @@
+import type {NetworkingFields} from '../src/networkingTypes.js';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
@@ -7,10 +8,10 @@ import type { InboxMessage } from './inbox.js';
 
 export type JobStatus = 'saved'|'preparing'|'ready'|'applied'|'interviewing'|'offer'|'rejected'|'archived'|'unknown';
 export interface Job { mobileEase?:'phone'|'laptop'|'unknown'; mobileNote?:string; track?:'career'|'income'|'unclassified'; employmentType?:'full_time'|'part_time'|'contract'|'internship'|'unknown'; id:string; company:string; title:string; location:string; source:string; url:string; status:JobStatus; deadline:string|null; description:string; notes:string; fit:number|null; fitReason:string; createdAt:string; updatedAt:string; needsReview:boolean }
-export interface Task { reviewProvider?:string; id:string; kind:'application'|'practice'|'scout'; jobId:string|null; status:'queued'|'running'|'done'|'failed'; error:string|null; createdAt:string; finishedAt:string|null; provider?:string; practiceId?:string; attempts?:number }
+export interface Task { contactId?:string; reviewProvider?:string; id:string; kind:'application'|'practice'|'scout'|'outreach'; jobId:string|null; status:'queued'|'running'|'done'|'failed'; error:string|null; createdAt:string; finishedAt:string|null; provider?:string; practiceId?:string; attempts?:number }
 export interface Document { reviewChecks?:{flag:string;note:string;reviewedAt:string}[]; id:string; jobId:string; kind:'cv'|'letter'|'answers'|'brief'; title:string; content:string; status:'draft'|'needs_review'|'approved'; createdAt:string; provider:string; flags:string[]; evidenceIds?:string[]; generationFlags?:string[]; sourceSnapshots?:{id:string;title:string;source:string;url:string;updatedAt:string;excerpt:string}[] }
 export interface Practice { reviewProviders?:string[]; id:string; jobId:string|null; kind:string; title:string; prompt:string; answer:string; draftAnswer?:string; feedback:string|null; score:number|null; status:string; createdAt:string; knowledgeId?:string|null; stage?:'clarify'|'structure'|'calculate'|'recommend'; stageAnswers?:Record<string,string>; timer?:{mode:'untimed'|'timed';elapsedSeconds:number}; sourceSnapshot?:{id:string;title:string;source:string;url:string;updatedAt:string;content:string} }
-export interface Contact { id:string; name:string; company:string; role:string; email:string; profileUrl:string; notes:string; followUp:string|null; status:string }
+export interface Contact extends NetworkingFields { id:string; name:string; company:string; role:string; email:string; profileUrl:string; notes:string; followUp:string|null; status:string }
 export interface Learning { id:string; title:string; skill:string; status:'planned'|'active'|'done'; nextAction:string; createdAt:string }
 export interface Evidence { id:string; category:string; text:string; source:string; status:'verified'|'user_stated'|'unresolved' }
 export interface Activity { id:string; text:string; createdAt:string }
@@ -35,6 +36,7 @@ export class Store {
       CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
       CREATE UNIQUE INDEX IF NOT EXISTS unique_job_url ON records(json_extract(data,'$.url')) WHERE type='jobs' AND json_extract(data,'$.url')<>'';
       CREATE UNIQUE INDEX IF NOT EXISTS active_application ON records(json_extract(data,'$.jobId')) WHERE type='tasks' AND json_extract(data,'$.kind')='application' AND json_extract(data,'$.status') IN ('queued','running');
+      CREATE UNIQUE INDEX IF NOT EXISTS active_outreach ON records(json_extract(data,'$.contactId')) WHERE type='tasks' AND json_extract(data,'$.kind')='outreach' AND json_extract(data,'$.status') IN ('queued','running');
       CREATE UNIQUE INDEX IF NOT EXISTS active_practice ON records(json_extract(data,'$.practiceId')) WHERE type='tasks' AND json_extract(data,'$.kind')='practice' AND json_extract(data,'$.status') IN ('queued','running');`);
     if (!this.meta('initialized')) {
       this.transaction(() => {
